@@ -1,1 +1,1 @@
-# WhatsApp-Chat-Analysis-API
+# WhatsApp Chat Analyzer API
