@@ -1,3 +1,5 @@
 /env
 /notebooks
 /__pycache__
+/functions/__pycache__
+/.vscode
