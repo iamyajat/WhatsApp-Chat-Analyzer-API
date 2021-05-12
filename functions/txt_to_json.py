@@ -71,6 +71,7 @@ def convert(
     d = df.to_json(orient="records")
 
     j = json.loads(d)
-    print(len(j))
+
+    j[-1]["message"] = j[-1]["message"][:-1]
 
     return j
