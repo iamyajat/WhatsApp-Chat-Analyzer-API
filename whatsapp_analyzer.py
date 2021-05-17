@@ -39,7 +39,7 @@ def message_extractor(x):
         return s
 
 
-def convert(
+def chats_to_df(
     chats,
     dayfirst=True,
 ):
@@ -68,10 +68,32 @@ def convert(
     df["sender"] = wa_data["person"]
     df["message"] = wa_data["message"]
 
-    d = df.to_json(orient="records")
+    return df
 
-    j = json.loads(d)
 
-    j[-1]["message"] = j[-1]["message"][:-1]
+def members(df):
+    chat_members = df["sender"].unique()
+    chat_members = [x for x in chat_members if str(x) != "nan"]
+    return chat_members
 
-    return j
+
+def analyze(
+    chats,
+    dayfirst=True,
+):
+    df = chats_to_df(chats, dayfirst=dayfirst)
+
+    df_json_str = df.to_json(orient="records")
+
+    df_json = json.loads(df_json_str)
+
+    df_json[-1]["message"] = df_json[-1]["message"][:-1]
+
+    chat_members = members(df)
+    print(chat_members)
+
+    return {
+        "no_of_messages": len(df_json),
+        "members": chat_members,
+        "messages": df_json,
+    }
