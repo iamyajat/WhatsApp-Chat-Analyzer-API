@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import re
 import json
+import datetime
 
 
 def time_extractor(x):
@@ -39,10 +40,18 @@ def message_extractor(x):
         return s
 
 
-def chats_to_df(
-    chats,
-    dayfirst=True,
-):
+def check_dates(dates):
+    for date in dates:
+        date = date[: date.find(", ")]
+        day, month, year = date.split("/")
+        try:
+            datetime.datetime(int(year), int(month), int(day))
+        except ValueError:
+            return False
+    return True
+
+
+def chats_to_df(chats):
     new_chats = []
     c = 0
     i = 0
@@ -62,6 +71,7 @@ def chats_to_df(
     wa_data["person"] = wa_data["person_chat"].apply(person_extractor)
     wa_data["message"] = wa_data["person_chat"].apply(message_extractor)
 
+    dayfirst = check_dates(list(wa_data["time"]))
     wa_data["time"] = pd.to_datetime(wa_data["time"], dayfirst=dayfirst)
 
     df = pd.DataFrame(wa_data["time"])
@@ -77,23 +87,26 @@ def members(df):
     return chat_members
 
 
-def analyze(
-    chats,
-    dayfirst=True,
-):
-    df = chats_to_df(chats, dayfirst=dayfirst)
-
+def chats_to_json(chats):
+    df = chats_to_df(chats)
     df_json_str = df.to_json(orient="records")
-
     df_json = json.loads(df_json_str)
-
     df_json[-1]["message"] = df_json[-1]["message"][:-1]
+    return {"no_of_messages": len(df_json), "chats": df_json}
 
+
+def no_of_messages_per_member(df):
+    count = df["sender"].value_counts()
+    return count.to_dict()
+
+
+def analyze(chats):
+    df = chats_to_df(chats)
     chat_members = members(df)
-    print(chat_members)
+    num_arr = no_of_messages_per_member(df)
 
     return {
-        "no_of_messages": len(df_json),
         "members": chat_members,
-        "messages": df_json,
+        "no_of_messages": len(df["message"]),
+        "no_of_messages_per_member": num_arr,
     }
