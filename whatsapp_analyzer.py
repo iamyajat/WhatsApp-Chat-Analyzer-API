@@ -144,6 +144,7 @@ def analyze(chats):
 
 def word_cloud(chats):
     df = chats_to_df(chats)
+    df = df.dropna()
     chat_words = ""
     for val in df["message"]:
         val = str(val)
