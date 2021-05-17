@@ -3,6 +3,9 @@ import pandas as pd
 import re
 import json
 import datetime
+from wordcloud import WordCloud, STOPWORDS
+
+stopwords = set(STOPWORDS)
 
 
 def time_extractor(x):
@@ -137,3 +140,24 @@ def analyze(chats):
         "no_of_messages_per_member": num_arr,
         "word_count_per_member": words,
     }
+
+
+def word_cloud(chats):
+    df = chats_to_df(chats)
+    chat_words = ""
+    for val in df["message"]:
+        val = str(val)
+        tokens = val.split()
+        for i in range(len(tokens)):
+            tokens[i] = tokens[i].lower()
+        chat_words += " ".join(tokens) + " "
+
+    wordcloud = WordCloud(
+        width=800,
+        height=800,
+        background_color="white",
+        stopwords=stopwords,
+        min_font_size=10,
+    ).generate(chat_words)
+
+    return np.array(wordcloud)

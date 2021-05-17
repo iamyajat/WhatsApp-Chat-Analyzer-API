@@ -1,7 +1,9 @@
 from re import split
 from fastapi import FastAPI, File, HTTPException, UploadFile
 import whatsapp_analyzer as wa
-import numpy as np
+from starlette.responses import StreamingResponse
+import io
+import matplotlib.pyplot as plt
 
 app = FastAPI(
     title="WhatsApp Analyzer",
@@ -52,3 +54,25 @@ async def random(n: int = 10, file: UploadFile = File(...)):
     chats = split("\n", decoded_contents)
     resp = wa.random_chats(chats, n)
     return resp
+
+
+@app.post("/word_cloud/")
+async def word_cloud(file: UploadFile = File(...)):
+    """Get a word cloud"""
+    extension = file.filename.split(".")[-1] in ("txt", "TXT")
+    if not extension:
+        raise HTTPException(status_code=400, detail="Please upload .txt files only!")
+    contents = await file.read()
+    decoded_contents = contents.decode("utf-8")
+    chats = split("\n", decoded_contents)
+    img = wa.word_cloud(chats)
+    buf = io.BytesIO()
+    plt.imsave(buf, img, format="PNG")
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="image/jpeg",
+        headers={
+            "Content-Disposition": 'inline; filename="%s.jpg"' % (file.filename[:-4],)
+        },
+    )
