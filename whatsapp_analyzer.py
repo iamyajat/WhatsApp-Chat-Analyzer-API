@@ -100,13 +100,40 @@ def no_of_messages_per_member(df):
     return count.to_dict()
 
 
+def word_count(df):
+    df = df.copy()
+    df["no_of_words"] = df["message"].apply(lambda x: len(str(x).split()))
+    df.dropna(inplace=True)
+    df = df.reset_index(drop=True)
+    members = df["sender"].unique()
+    word_count = {member: 0 for member in members}
+    for member in members:
+        sub_df = df[df["sender"] == member]
+        word_count[member] = sum(sub_df["no_of_words"])
+    series = pd.Series(word_count)
+    series = series.rename("Word Count")
+    return series.to_dict()
+
+
+def random_chats(chats, n):
+    df = chats_to_df(chats).sample(n)
+    df = df.dropna()
+    df = df.drop("time", axis=1)
+    df_json_str = df.to_json(orient="records")
+    df_json = json.loads(df_json_str)
+    df_json[-1]["message"] = df_json[-1]["message"][:-1]
+    return {"random_chats": df_json}
+
+
 def analyze(chats):
     df = chats_to_df(chats)
     chat_members = members(df)
     num_arr = no_of_messages_per_member(df)
+    words = word_count(df)
 
     return {
         "members": chat_members,
         "no_of_messages": len(df["message"]),
         "no_of_messages_per_member": num_arr,
+        "word_count_per_member": words,
     }

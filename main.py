@@ -17,7 +17,7 @@ async def root():
 
 @app.post("/chats_to_json/")
 async def chats_to_json(file: UploadFile = File(...)):
-    """Upload WhatsApp chats as .txt"""
+    """Get your chats in JSON format. (Upload WhatsApp chats as .txt)"""
     extension = file.filename.split(".")[-1] in ("txt", "TXT")
     if not extension:
         raise HTTPException(status_code=400, detail="Please upload .txt files only!")
@@ -30,7 +30,7 @@ async def chats_to_json(file: UploadFile = File(...)):
 
 @app.post("/analyze/")
 async def analyze(file: UploadFile = File(...)):
-    """Upload WhatsApp chats as .txt"""
+    """Get an analysis of your chats. (Upload WhatsApp chats as .txt)"""
     extension = file.filename.split(".")[-1] in ("txt", "TXT")
     if not extension:
         raise HTTPException(status_code=400, detail="Please upload .txt files only!")
@@ -38,4 +38,17 @@ async def analyze(file: UploadFile = File(...)):
     decoded_contents = contents.decode("utf-8")
     chats = split("\n", decoded_contents)
     resp = wa.analyze(chats)
+    return resp
+
+
+@app.post("/random/")
+async def random(n: int = 10, file: UploadFile = File(...)):
+    """Get random n chats. (Upload WhatsApp chats as .txt)"""
+    extension = file.filename.split(".")[-1] in ("txt", "TXT")
+    if not extension:
+        raise HTTPException(status_code=400, detail="Please upload .txt files only!")
+    contents = await file.read()
+    decoded_contents = contents.decode("utf-8")
+    chats = split("\n", decoded_contents)
+    resp = wa.random_chats(chats, n)
     return resp
