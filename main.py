@@ -4,11 +4,28 @@ import whatsapp_analyzer as wa
 from starlette.responses import StreamingResponse
 import io
 import matplotlib.pyplot as plt
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="WhatsApp Analyzer",
     version="1.0",
     description="Get beautiful insights about your chats!",
+)
+
+origins = [
+    "http://wa-chat-analyzer.herokuapp.com/",
+    "https://wa-chat-analyzer.herokuapp.com/",
+    "http://localhost",
+    "http://localhost:8000",
+    "http://localhost:0000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
