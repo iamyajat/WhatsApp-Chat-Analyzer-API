@@ -5,6 +5,8 @@ from starlette.responses import StreamingResponse
 import io
 import matplotlib.pyplot as plt
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.responses import PlainTextResponse
 
 app = FastAPI(
     title="WhatsApp Analyzer",
@@ -28,6 +30,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request, exc):
+    print(exc.detail)
+    return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
 
 
 @app.get("/")
@@ -74,7 +82,7 @@ async def random(n: int = 10, file: UploadFile = File(...)):
     return resp
 
 
-@app.post("/word_cloud/")
+@app.post("/wordcloud/")
 async def word_cloud(file: UploadFile = File(...)):
     """Get a word cloud"""
     extension = file.filename.split(".")[-1] in ("txt", "TXT")
