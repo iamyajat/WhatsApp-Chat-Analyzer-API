@@ -115,7 +115,7 @@ def word_count(df):
         word_count[member] = sum(sub_df["no_of_words"])
     series = pd.Series(word_count)
     series = series.rename("Word Count")
-    return series.to_dict()
+    return dict(sorted(series.to_dict().items(), key=lambda item: item[1], reverse=True))
 
 
 def random_chats(chats, n):
