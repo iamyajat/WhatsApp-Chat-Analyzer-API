@@ -14,18 +14,10 @@ app = FastAPI(
     description="Get beautiful insights about your chats!",
 )
 
-origins = [
-    "http://wa-chat-analyzer.herokuapp.com/",
-    "https://wa-chat-analyzer.herokuapp.com/",
-    "http://localhost",
-    "http://localhost:8000",
-    "http://localhost:3000",
-    "http://localhost:0000",
-]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
