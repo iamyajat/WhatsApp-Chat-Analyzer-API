@@ -3,6 +3,7 @@ import pandas as pd
 import re
 import json
 import datetime
+import random
 from wordcloud import WordCloud, STOPWORDS
 
 stopwords = set(STOPWORDS)
@@ -119,9 +120,13 @@ def word_count(df):
 
 
 def random_chats(chats, n):
-    df = chats_to_df(chats).sample(n)
+    df = chats_to_df(chats)
     df = df.dropna()
     df = df.drop("time", axis=1)
+    x = df['sender'].size
+    if(x>n):
+        r = random.randint(0, x-n-1)
+        df = df.iloc[r:r+n]
     df_json_str = df.to_json(orient="records")
     df_json = json.loads(df_json_str)
     df_json[-1]["message"] = df_json[-1]["message"][:-1]
