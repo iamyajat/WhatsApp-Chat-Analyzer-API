@@ -116,21 +116,69 @@ def word_count(df):
         word_count[member] = sum(sub_df["no_of_words"])
     series = pd.Series(word_count)
     series = series.rename("Word Count")
-    return dict(sorted(series.to_dict().items(), key=lambda item: item[1], reverse=True))
+    return dict(
+        sorted(series.to_dict().items(), key=lambda item: item[1], reverse=True)
+    )
 
 
-def random_chats(chats, n):
+def chats_month(df):
+    df["month"] = pd.DatetimeIndex(df["time"]).month
+    m_count = df["month"].value_counts().to_dict()
+    month_count = {
+        "Jan": 0,
+        "Feb": 0,
+        "Mar": 0,
+        "Apr": 0,
+        "May": 0,
+        "Jun": 0,
+        "Jul": 0,
+        "Aug": 0,
+        "Sep": 0,
+        "Oct": 0,
+        "Nov": 0,
+        "Dec": 0,
+    }
+    for mc in m_count:
+        if mc == 1:
+            month_count["Jan"] = m_count[mc]
+        if mc == 2:
+            month_count["Feb"] = m_count[mc]
+        if mc == 3:
+            month_count["Mar"] = m_count[mc]
+        if mc == 4:
+            month_count["Apr"] = m_count[mc]
+        if mc == 5:
+            month_count["May"] = m_count[mc]
+        if mc == 6:
+            month_count["Jun"] = m_count[mc]
+        if mc == 7:
+            month_count["Jul"] = m_count[mc]
+        if mc == 8:
+            month_count["Aug"] = m_count[mc]
+        if mc == 9:
+            month_count["Sep"] = m_count[mc]
+        if mc == 10:
+            month_count["Oct"] = m_count[mc]
+        if mc == 11:
+            month_count["Nov"] = m_count[mc]
+        if mc == 12:
+            month_count["Dec"] = m_count[mc]
+
+    return month_count
+
+
+def throwback_chats(chats, n):
     df = chats_to_df(chats)
     df = df.dropna()
     df = df.drop("time", axis=1)
-    x = df['sender'].size
-    if(x>n):
-        r = random.randint(0, x-n-1)
-        df = df.iloc[r:r+n]
+    x = df["sender"].size
+    if x > n:
+        r = random.randint(0, x - n - 1)
+        df = df.iloc[r : r + n]
     df_json_str = df.to_json(orient="records")
     df_json = json.loads(df_json_str)
     df_json[-1]["message"] = df_json[-1]["message"][:-1]
-    return {"random_chats": df_json}
+    return {"throwback_chats": df_json}
 
 
 def analyze(chats):
@@ -138,12 +186,14 @@ def analyze(chats):
     chat_members = members(df)
     num_arr = no_of_messages_per_member(df)
     words = word_count(df)
+    month = chats_month(df)
 
     return {
         "members": chat_members,
         "no_of_messages": len(df["message"]),
         "no_of_messages_per_member": num_arr,
         "word_count_per_member": words,
+        "month_chats_count": month,
     }
 
 

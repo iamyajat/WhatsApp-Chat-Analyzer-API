@@ -35,7 +35,7 @@ async def root():
     return {"message": "Service is up!"}
 
 
-@app.post("/chats_to_json/")
+@app.post("/chats_to_json")
 async def chats_to_json(file: UploadFile = File(...)):
     """Get your chats in JSON format. (Upload WhatsApp chats as .txt)"""
     extension = file.filename.split(".")[-1] in ("txt", "TXT")
@@ -48,7 +48,7 @@ async def chats_to_json(file: UploadFile = File(...)):
     return resp
 
 
-@app.post("/analyze/")
+@app.post("/analyze")
 async def analyze(file: UploadFile = File(...)):
     """Get an analysis of your chats. (Upload WhatsApp chats as .txt)"""
     extension = file.filename.split(".")[-1] in ("txt", "TXT")
@@ -61,20 +61,20 @@ async def analyze(file: UploadFile = File(...)):
     return resp
 
 
-@app.post("/random/")
+@app.post("/throwback")
 async def random(n: int = 10, file: UploadFile = File(...)):
-    """Get random n chats. (Upload WhatsApp chats as .txt)"""
+    """Get a set of n old chats. (Upload WhatsApp chats as .txt)"""
     extension = file.filename.split(".")[-1] in ("txt", "TXT")
     if not extension:
         raise HTTPException(status_code=400, detail="Please upload .txt files only!")
     contents = await file.read()
     decoded_contents = contents.decode("utf-8")
     chats = split("\n", decoded_contents)
-    resp = wa.random_chats(chats, n)
+    resp = wa.throwback_chats(chats, n)
     return resp
 
 
-@app.post("/wordcloud/")
+@app.post("/wordcloud")
 async def word_cloud(file: UploadFile = File(...)):
     """Get a word cloud"""
     extension = file.filename.split(".")[-1] in ("txt", "TXT")
