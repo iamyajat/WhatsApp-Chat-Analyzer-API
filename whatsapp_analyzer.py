@@ -5,6 +5,9 @@ import json
 import datetime
 import random
 from wordcloud import WordCloud, STOPWORDS
+import emoji
+from collections import Counter
+from datetime import timedelta
 
 stopwords = set(STOPWORDS)
 
@@ -91,6 +94,16 @@ def members(df):
     return chat_members
 
 
+def getYear2021(df):
+    df = df[df["time"].dt.year == 2021]
+    df.reset_index(drop=True, inplace=True)
+    return df
+
+
+def extract_emojis(s):
+    return "".join(c for c in s if c in emoji.UNICODE_EMOJI["en"])
+
+
 def chats_to_json(chats):
     df = chats_to_df(chats)
     df_json_str = df.to_json(orient="records")
@@ -167,6 +180,43 @@ def chats_month(df):
     return month_count
 
 
+def most_used_emoji(df):
+    df = df.dropna()
+    emoji_list = df["message"].apply(extract_emojis).tolist()
+    emoji_str = "".join(emoji_list)
+    res = Counter(emoji_str)
+    top_10 = res.most_common(10)
+    top_10_dict = {x[0]: x[1] for x in top_10}
+    return top_10_dict
+
+
+def chats_hour(df):
+    df["hour"] = pd.DatetimeIndex(df["time"]).hour
+    h_count = df["hour"].value_counts().to_dict()
+    return h_count
+
+
+def get_time_diff(df):
+    df = df.dropna()
+    df.reset_index(drop=True, inplace=True)
+    df["time_diff"] = df["time"].diff()
+    return df
+
+
+def longest_wait(df):
+    df = get_time_diff(df)
+    max_gap = df["time_diff"].max()
+    return max_gap * 1000
+
+
+def who_texts_first(df):
+    df = get_time_diff(df)
+    df = df[df["time_diff"] > timedelta(minutes=30)]
+    send_counts = df["sender"].value_counts().to_dict()
+    max_send_counts = max(send_counts, key=send_counts.get)
+    return max_send_counts
+
+
 def throwback_chats(chats, n):
     df = chats_to_df(chats)
     df = df.dropna()
@@ -217,3 +267,40 @@ def word_cloud(chats):
     ).generate(chat_words)
 
     return np.array(wordcloud)
+
+
+def wrap(chats):
+    # WhatsApp Wrap 2021 features:
+    # 1. Number of messages
+    # 2. Number of messages per member
+    # 3. Word count per member
+    # 4. Most active month
+    # 5. Monthly chats count
+    # 6. Most active hour
+    # 7. Hourly chats count
+    # 8. Most used emoji
+    # 9. Longest wait
+    # 10. Who texts first
+
+    df = getYear2021(chats_to_df(chats))
+    chat_members = members(df)
+    num_arr = no_of_messages_per_member(df)
+    words = word_count(df)
+    month = chats_month(df)
+    hour = chats_hour(df)
+    top_10_emoji = most_used_emoji(df)
+
+    return {
+        "members": chat_members,
+        "total_no_of_chats": len(df.index),
+        "no_of_messages_per_member": num_arr,
+        "word_count_per_member": words,
+        "most_active_month": max(month, key=month.get),
+        "monthly_chats_count": month,
+        "most_active_hour": max(hour, key=hour.get),
+        "hourly_count": hour,
+        "most_used_emoji": max(top_10_emoji, key=top_10_emoji.get),
+        "top_10_emojis": top_10_emoji,
+        "longest_wait": longest_wait(df),
+        "who_texts_first": who_texts_first(df),
+    }

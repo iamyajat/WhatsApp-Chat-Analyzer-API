@@ -94,3 +94,16 @@ async def word_cloud(file: UploadFile = File(...)):
             "Content-Disposition": 'inline; filename="%s.jpg"' % (file.filename[:-4],)
         },
     )
+
+
+@app.post("/wrap")
+async def wrap(file: UploadFile = File(...)):
+    """WhatsApp Wrap 2021"""
+    extension = file.filename.split(".")[-1] in ("txt", "TXT")
+    if not extension:
+        raise HTTPException(status_code=400, detail="Please upload .txt files only!")
+    contents = await file.read()
+    decoded_contents = contents.decode("utf-8")
+    chats = split("\n", decoded_contents)
+    resp = wa.wrap(chats)
+    return resp
