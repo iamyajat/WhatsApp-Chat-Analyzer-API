@@ -212,8 +212,8 @@ def longest_wait(df):
     date2 = date1 - max_gap
     return {
         "gap": max_gap * 1000,
-        "start": int(date2.timestamp() * 1000),
-        "end": int(date1.timestamp() * 1000),
+        "start_time": int(date2.timestamp() * 1000),
+        "end_time": int(date1.timestamp() * 1000),
     }
 
 
@@ -239,22 +239,6 @@ def throwback_chats(chats, n):
     return {"throwback_chats": df_json}
 
 
-def analyze(chats):
-    df = chats_to_df(chats)
-    chat_members = members(df)
-    num_arr = no_of_messages_per_member(df)
-    words = word_count(df)
-    month = chats_month(df)
-
-    return {
-        "members": chat_members,
-        "no_of_messages": len(df["message"]),
-        "no_of_messages_per_member": num_arr,
-        "word_count_per_member": words,
-        "month_chats_count": month,
-    }
-
-
 def words_weight(df):
     df = df.dropna()
     chat_words = ""
@@ -269,7 +253,9 @@ def words_weight(df):
 
 def word_cloud_words(df):
     chat_words = words_weight(df)
-    words_dict = WordCloud().process_text(chat_words)
+    words_dict = WordCloud(
+        stopwords=stopwords,
+    ).process_text(chat_words)
     words_dict = dict(
         sorted(words_dict.items(), key=lambda item: item[1], reverse=True)
     )
@@ -290,20 +276,30 @@ def word_cloud(chats):
     return np.array(wordcloud)
 
 
-def wrap(chats):
-    # WhatsApp Wrap 2021 features:
-    # 1. Number of messages
-    # 2. Number of messages per member
-    # 3. Word count per member
-    # 4. Most active month
-    # 5. Monthly chats count
-    # 6. Most active hour
-    # 7. Hourly chats count
-    # 8. Most used emoji
-    # 9. Longest wait
-    # 10. Who texts first
-    # 11. Most used words (word cloud)
+def most_active_day(df):
+    df["date"] = pd.DatetimeIndex(df["time"]).date
+    d_count = df["date"].value_counts()
+    max_day = d_count.loc[d_count == d_count.max()]
+    print(type(max_day.index[0]))
+    return max_day.index[0].strftime("%d-%m-%Y")
 
+def analyze(chats):
+    df = chats_to_df(chats)
+    chat_members = members(df)
+    num_arr = no_of_messages_per_member(df)
+    words = word_count(df)
+    month = chats_month(df)
+
+    return {
+        "members": chat_members,
+        "no_of_messages": len(df["message"]),
+        "no_of_messages_per_member": num_arr,
+        "word_count_per_member": words,
+        "month_chats_count": month,
+    }
+
+
+def wrap(chats):
     df = getYear2021(chats_to_df(chats))
     chat_members = members(df)
     num_arr = no_of_messages_per_member(df)
@@ -316,12 +312,14 @@ def wrap(chats):
     return {
         "members": chat_members,
         "total_no_of_chats": len(df.index),
+        "most_active_member": max(num_arr, key=num_arr.get),
         "no_of_messages_per_member": num_arr,
         "word_count_per_member": words,
         "most_active_month": max(month, key=month.get),
         "monthly_chats_count": month,
         "most_active_hour": max(hour, key=hour.get),
         "hourly_count": hour,
+        "most_active_day": most_active_day(df),
         "longest_gap": longest_wait(df),
         "who_texts_first": who_texts_first(df),
         "most_used_emoji": top_10_emoji[0],
