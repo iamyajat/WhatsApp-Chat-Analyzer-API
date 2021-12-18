@@ -186,8 +186,9 @@ def most_used_emoji(df):
     emoji_str = "".join(emoji_list)
     res = Counter(emoji_str)
     top_10 = res.most_common(10)
-    top_10_dict = {x[0]: x[1] for x in top_10}
-    return top_10_dict
+    top_10_list = [{"emoji": x[0], "freq": x[1]} for x in top_10]
+
+    return top_10_list
 
 
 def chats_hour(df):
@@ -301,6 +302,7 @@ def wrap(chats):
     month = chats_month(df)
     hour = chats_hour(df)
     top_10_emoji = most_used_emoji(df)
+    cloud_words = word_cloud_words(df)
 
     return {
         "members": chat_members,
@@ -311,9 +313,10 @@ def wrap(chats):
         "monthly_chats_count": month,
         "most_active_hour": max(hour, key=hour.get),
         "hourly_count": hour,
-        "most_used_emoji": max(top_10_emoji, key=top_10_emoji.get),
-        "top_10_emojis": top_10_emoji,
         "longest_wait": longest_wait(df),
         "who_texts_first": who_texts_first(df),
-        "word_cloud": word_cloud_words(df),
+        "most_used_emoji": top_10_emoji[0],
+        "top_10_emojis": top_10_emoji,
+        "most_used_word": cloud_words[0],
+        "word_cloud_words": cloud_words,
     }
