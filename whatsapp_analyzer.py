@@ -206,8 +206,15 @@ def get_time_diff(df):
 
 def longest_wait(df):
     df = get_time_diff(df)
-    max_gap = df["time_diff"].max()
-    return max_gap * 1000
+    df1 = df[df["time_diff"] == df["time_diff"].max()]
+    max_gap = df1["time_diff"].max()
+    date1 = df1["time"].iloc[0]
+    date2 = date1 - max_gap
+    return {
+        "gap": max_gap * 1000,
+        "start": int(date2.timestamp() * 1000),
+        "end": int(date1.timestamp() * 1000),
+    }
 
 
 def who_texts_first(df):
@@ -263,7 +270,9 @@ def words_weight(df):
 def word_cloud_words(df):
     chat_words = words_weight(df)
     words_dict = WordCloud().process_text(chat_words)
-    words_dict = dict(sorted(words_dict.items(), key=lambda item: item[1], reverse=True))
+    words_dict = dict(
+        sorted(words_dict.items(), key=lambda item: item[1], reverse=True)
+    )
     return [{"word": k, "freq": v} for k, v in words_dict.items()][:100]
 
 
@@ -313,7 +322,7 @@ def wrap(chats):
         "monthly_chats_count": month,
         "most_active_hour": max(hour, key=hour.get),
         "hourly_count": hour,
-        "longest_wait": longest_wait(df),
+        "longest_gap": longest_wait(df),
         "who_texts_first": who_texts_first(df),
         "most_used_emoji": top_10_emoji[0],
         "top_10_emojis": top_10_emoji,
