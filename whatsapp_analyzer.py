@@ -247,8 +247,7 @@ def analyze(chats):
     }
 
 
-def word_cloud(chats):
-    df = chats_to_df(chats)
+def words_weight(df):
     df = df.dropna()
     chat_words = ""
     for val in df["message"]:
@@ -257,7 +256,19 @@ def word_cloud(chats):
         for i in range(len(tokens)):
             tokens[i] = tokens[i].lower()
         chat_words += " ".join(tokens) + " "
+    return chat_words
 
+
+def word_cloud_words(df):
+    chat_words = words_weight(df)
+    words_dict = WordCloud().process_text(chat_words)
+    words_dict = dict(sorted(words_dict.items(), key=lambda item: item[1], reverse=True))
+    return [{"word": k, "freq": v} for k, v in words_dict.items()][:100]
+
+
+def word_cloud(chats):
+    df = chats_to_df(chats)
+    chat_words = words_weight(df)
     wordcloud = WordCloud(
         width=800,
         height=800,
@@ -281,6 +292,7 @@ def wrap(chats):
     # 8. Most used emoji
     # 9. Longest wait
     # 10. Who texts first
+    # 11. Most used words (word cloud)
 
     df = getYear2021(chats_to_df(chats))
     chat_members = members(df)
@@ -303,4 +315,5 @@ def wrap(chats):
         "top_10_emojis": top_10_emoji,
         "longest_wait": longest_wait(df),
         "who_texts_first": who_texts_first(df),
+        "word_cloud": word_cloud_words(df),
     }
