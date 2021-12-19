@@ -8,6 +8,8 @@ from wordcloud import WordCloud, STOPWORDS
 import emoji
 from collections import Counter
 from datetime import timedelta
+import time
+from dateutil import tz
 
 stopwords = set(STOPWORDS)
 
@@ -113,8 +115,9 @@ def chats_to_json(chats):
 
 
 def no_of_messages_per_member(df):
-    count = df["sender"].value_counts()
-    return count.to_dict()
+    count = df["sender"].value_counts().to_dict()
+    count_list = [{"member": x, "count": count[x]} for x in count]
+    return count_list
 
 
 def word_count(df):
@@ -129,9 +132,11 @@ def word_count(df):
         word_count[member] = sum(sub_df["no_of_words"])
     series = pd.Series(word_count)
     series = series.rename("Word Count")
-    return dict(
+    word_dict = dict(
         sorted(series.to_dict().items(), key=lambda item: item[1], reverse=True)
     )
+    word_list = [{"member": x, "count": word_dict[x]} for x in word_dict]
+    return word_list
 
 
 def chats_month(df):
@@ -281,7 +286,17 @@ def most_active_day(df):
     d_count = df["date"].value_counts()
     max_day = d_count.loc[d_count == d_count.max()]
     print(type(max_day.index[0]))
-    return max_day.index[0].strftime("%d-%m-%Y")
+    max_day_dict = max_day.to_dict()
+    max_day_list = [
+        {
+            "date": datetime.datetime(year=x.year, month=x.month, day=x.day, tzinfo=tz.tzutc()).timestamp()
+            * 1000,
+            "amount": max_day_dict[x],
+        }
+        for x in max_day_dict
+    ][0]
+    return max_day_list
+
 
 def analyze(chats):
     df = chats_to_df(chats)
@@ -310,9 +325,10 @@ def wrap(chats):
     cloud_words = word_cloud_words(df)
 
     return {
+        "group": len(chat_members) > 2,
         "members": chat_members,
         "total_no_of_chats": len(df.index),
-        "most_active_member": max(num_arr, key=num_arr.get),
+        "most_active_member": num_arr[0],
         "no_of_messages_per_member": num_arr,
         "word_count_per_member": words,
         "most_active_month": max(month, key=month.get),
