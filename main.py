@@ -1,6 +1,6 @@
 from re import split
 from fastapi import FastAPI, File, HTTPException, UploadFile
-import whatsapp_analyzer as wa
+import src.whatsapp_analyzer as wa
 from starlette.responses import StreamingResponse
 import io
 import matplotlib.pyplot as plt

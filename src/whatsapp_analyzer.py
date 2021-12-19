@@ -11,6 +11,8 @@ from datetime import timedelta
 import time
 from dateutil import tz
 
+# from src.sentiment_analysis import sentiment_analysis
+
 stopwords = set(STOPWORDS)
 
 
@@ -142,45 +144,25 @@ def word_count(df):
 def chats_month(df):
     df["month"] = pd.DatetimeIndex(df["time"]).month
     m_count = df["month"].value_counts().to_dict()
-    month_count = {
-        "Jan": 0,
-        "Feb": 0,
-        "Mar": 0,
-        "Apr": 0,
-        "May": 0,
-        "Jun": 0,
-        "Jul": 0,
-        "Aug": 0,
-        "Sep": 0,
-        "Oct": 0,
-        "Nov": 0,
-        "Dec": 0,
-    }
+    months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
+
+    month_count = [{"month": x, "count": 0} for x in months]
+
     for mc in m_count:
-        if mc == 1:
-            month_count["Jan"] = m_count[mc]
-        if mc == 2:
-            month_count["Feb"] = m_count[mc]
-        if mc == 3:
-            month_count["Mar"] = m_count[mc]
-        if mc == 4:
-            month_count["Apr"] = m_count[mc]
-        if mc == 5:
-            month_count["May"] = m_count[mc]
-        if mc == 6:
-            month_count["Jun"] = m_count[mc]
-        if mc == 7:
-            month_count["Jul"] = m_count[mc]
-        if mc == 8:
-            month_count["Aug"] = m_count[mc]
-        if mc == 9:
-            month_count["Sep"] = m_count[mc]
-        if mc == 10:
-            month_count["Oct"] = m_count[mc]
-        if mc == 11:
-            month_count["Nov"] = m_count[mc]
-        if mc == 12:
-            month_count["Dec"] = m_count[mc]
+        month_count[mc - 1]["count"] = m_count[mc]
 
     return month_count
 
@@ -191,7 +173,7 @@ def most_used_emoji(df):
     emoji_str = "".join(emoji_list)
     res = Counter(emoji_str)
     top_10 = res.most_common(10)
-    top_10_list = [{"emoji": x[0], "freq": x[1]} for x in top_10]
+    top_10_list = [{"emoji": x[0], "count": x[1]} for x in top_10]
 
     return top_10_list
 
@@ -199,7 +181,10 @@ def most_used_emoji(df):
 def chats_hour(df):
     df["hour"] = pd.DatetimeIndex(df["time"]).hour
     h_count = df["hour"].value_counts().to_dict()
-    return h_count
+    hour_count = [{"hour": x, "count": 0} for x in range(24)]
+    for hc in h_count:
+        hour_count[hc]["count"] = h_count[hc]
+    return hour_count
 
 
 def get_time_diff(df):
@@ -264,7 +249,15 @@ def word_cloud_words(df):
     words_dict = dict(
         sorted(words_dict.items(), key=lambda item: item[1], reverse=True)
     )
-    return [{"word": k, "freq": v} for k, v in words_dict.items()][:100]
+    if len(words_dict) > 100:
+        words_dict = {k: words_dict[k] for k in list(words_dict)[:100]}
+    max_val = max(words_dict.values())
+    min_val = min(words_dict.values()) - 1
+    diff_val = max_val - min_val
+    return [
+        {"word": k, "count": v, "weight": ((v - min_val) / diff_val)}
+        for k, v in words_dict.items()
+    ]
 
 
 def word_cloud(chats):
@@ -289,7 +282,9 @@ def most_active_day(df):
     max_day_dict = max_day.to_dict()
     max_day_list = [
         {
-            "date": datetime.datetime(year=x.year, month=x.month, day=x.day, tzinfo=tz.tzutc()).timestamp()
+            "date": datetime.datetime(
+                year=x.year, month=x.month, day=x.day, tzinfo=tz.tzutc()
+            ).timestamp()
             * 1000,
             "amount": max_day_dict[x],
         }
@@ -319,8 +314,17 @@ def wrap(chats):
     chat_members = members(df)
     num_arr = no_of_messages_per_member(df)
     words = word_count(df)
-    month = chats_month(df)
-    hour = chats_hour(df)
+    months = chats_month(df)
+    # get max month
+    max_month = months[0]
+    for m in months:
+        if m["count"] > max_month["count"]:
+            max_month = m
+    hours = chats_hour(df)
+    max_hour = hours[0]
+    for h in hours:
+        if h["count"] > max_hour["count"]:
+            max_hour = h
     top_10_emoji = most_used_emoji(df)
     cloud_words = word_cloud_words(df)
 
@@ -331,10 +335,10 @@ def wrap(chats):
         "most_active_member": num_arr[0],
         "no_of_messages_per_member": num_arr,
         "word_count_per_member": words,
-        "most_active_month": max(month, key=month.get),
-        "monthly_chats_count": month,
-        "most_active_hour": max(hour, key=hour.get),
-        "hourly_count": hour,
+        "most_active_month": max_month,
+        "monthly_chats_count": months,
+        "most_active_hour": max_hour,
+        "hourly_count": hours,
         "most_active_day": most_active_day(df),
         "longest_gap": longest_wait(df),
         "who_texts_first": who_texts_first(df),
