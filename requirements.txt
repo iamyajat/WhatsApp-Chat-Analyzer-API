@@ -8,3 +8,4 @@ fastapi==0.70.1
 pattern==3.6
 python_dateutil==2.8.2
 uvicorn==0.13.4
+python-multipart==0.0.5
