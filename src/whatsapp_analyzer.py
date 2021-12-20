@@ -10,6 +10,7 @@ from collections import Counter
 from datetime import timedelta
 import time
 from dateutil import tz
+import requests
 
 # from src.sentiment_analysis import sentiment_analysis
 
@@ -167,6 +168,35 @@ def chats_month(df):
     return month_count
 
 
+def get_gender(name):
+    URL = "https://api.genderize.io"
+    PARAMS = {"name": name}
+    r = requests.get(url=URL, params=PARAMS)
+    data = r.json()
+    return data
+
+
+def get_category(names):
+    n = []
+    for name in names:
+        x = name.split()
+        n.append(x[0].lower())
+    data = get_gender(n)
+    genders = []
+    gb = {"boy": False, "girl": False}
+    try:
+        for d in data:
+            genders.append(d["gender"])
+            if d["gender"] == "male":
+                gb["boy"] = True
+            elif d["gender"] == "female":
+                gb["girl"] = True
+    except:
+        print("Gender API calls over")
+
+    return gb
+
+
 def most_used_emoji(df):
     df = df.dropna()
     emoji_list = df["message"].apply(extract_emojis).tolist()
@@ -278,7 +308,6 @@ def most_active_day(df):
     df["date"] = pd.DatetimeIndex(df["time"]).date
     d_count = df["date"].value_counts()
     max_day = d_count.loc[d_count == d_count.max()]
-    print(type(max_day.index[0]))
     max_day_dict = max_day.to_dict()
     max_day_list = [
         {
@@ -331,6 +360,7 @@ def wrap(chats):
     return {
         "group": len(chat_members) > 2,
         "members": chat_members,
+        "gender": get_category(chat_members),
         "total_no_of_chats": len(df.index),
         "most_active_member": num_arr[0],
         "no_of_messages_per_member": num_arr,
