@@ -325,6 +325,12 @@ def most_active_day(df):
     return max_day_list
 
 
+def zscore(amt):
+    mean = 20000
+    std = 10000
+    return (amt - mean) / std
+
+
 def analyze(chats):
     df = chats_to_df(chats)
     chat_members = members(df)
@@ -365,6 +371,7 @@ def wrap(chats):
         "members": chat_members,
         "gender": get_category(chat_members),
         "total_no_of_chats": len(df.index),
+        "z_score": zscore(len(df.index)),
         "most_active_member": num_arr[0],
         "no_of_messages_per_member": num_arr,
         "word_count_per_member": words,
