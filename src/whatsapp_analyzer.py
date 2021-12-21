@@ -165,7 +165,10 @@ def chats_month(df):
     for mc in m_count:
         month_count[mc - 1]["count"] = m_count[mc]
 
-    return month_count
+    month_df = pd.DataFrame(month_count)
+    month_df["month_codes"] = pd.Series(range(1, 13))
+    month_corr = month_df["month_codes"].corr(month_df["count"])
+    return month_count, month_corr
 
 
 def get_gender(name):
@@ -343,7 +346,7 @@ def wrap(chats):
     chat_members = members(df)
     num_arr = no_of_messages_per_member(df)
     words = word_count(df)
-    months = chats_month(df)
+    months, month_corr = chats_month(df)
     # get max month
     max_month = months[0]
     for m in months:
@@ -366,6 +369,7 @@ def wrap(chats):
         "no_of_messages_per_member": num_arr,
         "word_count_per_member": words,
         "most_active_month": max_month,
+        "month_correlation": month_corr,
         "monthly_chats_count": months,
         "most_active_hour": max_hour,
         "hourly_count": hours,
