@@ -326,7 +326,7 @@ def most_active_day(df):
 
 def zscore(amt):
     mean = 25000
-    std = 15000
+    std = 12000
     z = (amt - mean) / std
     p = st.norm.cdf(z)
     return z, p
