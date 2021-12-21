@@ -14,7 +14,7 @@ import requests
 import scipy.stats as st
 import base64
 import io
-# from PIL import Image
+from PIL import Image
 
 
 stopwords = set(STOPWORDS)
@@ -300,13 +300,13 @@ def word_cloud_words(df):
 
 def word_cloud(df):
     chat_words = words_weight(df)
-    # mask_arr = np.array(Image.open("assets/masks/walogo.png"))
+    mask_arr = np.array(Image.open("assets/masks/walogo.jpg"))
 
     wordcloud = WordCloud(
         font_path="assets/fonts/Poppins-Medium.ttf",
-        # mask=mask_arr,
-        width=500,
-        height=700,
+        mask=mask_arr,
+        width=800,
+        height=800,
         stopwords=stopwords,
         min_font_size=10,
         colormap="rainbow",
