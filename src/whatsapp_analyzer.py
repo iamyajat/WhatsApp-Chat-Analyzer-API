@@ -299,9 +299,9 @@ def word_cloud(df):
     wordcloud = WordCloud(
         width=600,
         height=800,
-        background_color="white",
         stopwords=stopwords,
         min_font_size=10,
+        colormap="rainbow",
     ).generate(chat_words)
 
     return wordcloud
