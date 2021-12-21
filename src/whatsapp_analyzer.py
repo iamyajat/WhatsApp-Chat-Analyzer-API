@@ -12,6 +12,8 @@ import time
 from dateutil import tz
 import requests
 import scipy.stats as st
+import base64
+import io
 
 stopwords = set(STOPWORDS)
 
@@ -292,8 +294,7 @@ def word_cloud_words(df):
     ]
 
 
-def word_cloud(chats):
-    df = chats_to_df(chats)
+def word_cloud(df):
     chat_words = words_weight(df)
     wordcloud = WordCloud(
         width=800,
@@ -303,7 +304,21 @@ def word_cloud(chats):
         min_font_size=10,
     ).generate(chat_words)
 
-    return np.array(wordcloud)
+    return wordcloud
+
+
+def get_word_cloud(chats):
+    df = chats_to_df(chats)
+    return word_cloud_to_base64(df)
+
+
+def word_cloud_to_base64(df):
+    img = word_cloud(df)
+    img_bytes = io.BytesIO()
+    img.to_image().save(img_bytes, format="PNG")
+    img_bytes = img_bytes.getvalue()
+    img_base64 = base64.b64encode(img_bytes).decode("utf-8")
+    return img_base64
 
 
 def most_active_day(df):
@@ -366,7 +381,7 @@ def wrap(chats):
             max_hour = h
     top_10_emoji = most_used_emoji(df)
     cloud_words = word_cloud_words(df)
-    z, p =zscore(len(df.index))
+    z, p = zscore(len(df.index))
 
     return {
         "group": len(chat_members) > 2,
@@ -390,4 +405,5 @@ def wrap(chats):
         "top_10_emojis": top_10_emoji,
         "most_used_word": cloud_words[0],
         "word_cloud_words": cloud_words,
+        "word_cloud_base64": word_cloud_to_base64(df),
     }

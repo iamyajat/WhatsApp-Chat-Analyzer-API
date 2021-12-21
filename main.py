@@ -83,17 +83,18 @@ async def word_cloud(file: UploadFile = File(...)):
     contents = await file.read()
     decoded_contents = contents.decode("utf-8")
     chats = split("\n", decoded_contents)
-    img = wa.word_cloud(chats)
-    buf = io.BytesIO()
-    plt.imsave(buf, img, format="PNG")
-    buf.seek(0)
-    return StreamingResponse(
-        buf,
-        media_type="image/jpeg",
-        headers={
-            "Content-Disposition": 'inline; filename="%s.jpg"' % (file.filename[:-4],)
-        },
-    )
+    img = wa.get_word_cloud(chats)
+    # buf = io.BytesIO()
+    # plt.imsave(buf, img, format="PNG")
+    # buf.seek(0)
+    # return StreamingResponse(
+    #     buf,
+    #     media_type="image/jpeg",
+    #     headers={
+    #         "Content-Disposition": 'inline; filename="%s.jpg"' % (file.filename[:-4],)
+    #     },
+    # )
+    return img
 
 
 @app.post("/wrap")
