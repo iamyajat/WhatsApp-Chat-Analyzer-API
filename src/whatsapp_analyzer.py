@@ -11,8 +11,7 @@ from datetime import timedelta
 import time
 from dateutil import tz
 import requests
-
-# from src.sentiment_analysis import sentiment_analysis
+import scipy.stats as st
 
 stopwords = set(STOPWORDS)
 
@@ -326,9 +325,11 @@ def most_active_day(df):
 
 
 def zscore(amt):
-    mean = 20000
-    std = 10000
-    return (amt - mean) / std
+    mean = 25000
+    std = 15000
+    z = (amt - mean) / std
+    p = st.norm.cdf(z)
+    return z, p
 
 
 def analyze(chats):
@@ -365,13 +366,15 @@ def wrap(chats):
             max_hour = h
     top_10_emoji = most_used_emoji(df)
     cloud_words = word_cloud_words(df)
+    z, p =zscore(len(df.index))
 
     return {
         "group": len(chat_members) > 2,
         "members": chat_members,
         "gender": get_category(chat_members),
         "total_no_of_chats": len(df.index),
-        "z_score": zscore(len(df.index)),
+        "top_percent": p,
+        "z_score": z,
         "most_active_member": num_arr[0],
         "no_of_messages_per_member": num_arr,
         "word_count_per_member": words,
