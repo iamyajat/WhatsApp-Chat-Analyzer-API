@@ -14,6 +14,7 @@ import requests
 import scipy.stats as st
 import base64
 import io
+
 # from PIL import Image
 
 
@@ -348,11 +349,11 @@ def most_active_day(df):
 
 
 def zscore(amt):
-    mean = 25000
-    std = 12000
+    mean = 35000
+    std = 20000
     z = (amt - mean) / std
     p = st.norm.cdf(z)
-    return z, p
+    return z, min(p, 0.999999)
 
 
 def analyze(chats):
@@ -396,7 +397,7 @@ def wrap(chats):
         "members": chat_members,
         "gender": get_category(chat_members),
         "total_no_of_chats": len(df.index),
-        "top_percent": p,
+        "top_percent": (1 - p),
         "z_score": z,
         "most_active_member": num_arr[0],
         "no_of_messages_per_member": num_arr,
