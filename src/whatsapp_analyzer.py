@@ -353,7 +353,7 @@ def zscore(amt):
     std = 20000
     z = (amt - mean) / std
     p = st.norm.cdf(z)
-    return z, min(p, 0.999999)
+    return z, max(min(p, 0.999999), 0.0001)
 
 
 def analyze(chats):
