@@ -297,7 +297,7 @@ def word_cloud_words(df):
 def word_cloud(df):
     chat_words = words_weight(df)
     wordcloud = WordCloud(
-        width=800,
+        width=600,
         height=800,
         background_color="white",
         stopwords=stopwords,
