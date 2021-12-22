@@ -349,7 +349,7 @@ def most_active_day(df):
 
 
 def zscore(amt):
-    mean = 35000
+    mean = 30000
     std = 20000
     z = (amt - mean) / std
     p = st.norm.cdf(z)
@@ -394,25 +394,25 @@ def wrap(chats):
 
     return {
         "group": len(chat_members) > 2,
-        "members": chat_members,
+        "members": chat_members, #used
         # "gender": get_category(chat_members),
-        "total_no_of_chats": len(df.index),
-        "top_percent": (1 - p),
+        # "total_no_of_chats": len(df.index),
+        "top_percent": (1 - p),#used
         # "z_score": z,
         # "most_active_member": num_arr[0],
-        "no_of_messages_per_member": num_arr,
+        "no_of_messages_per_member": num_arr,#used
         # "word_count_per_member": words,
-        "most_active_month": max_month,
-        "month_correlation": month_corr,
-        "monthly_chats_count": months,
-        "most_active_hour": max_hour,
-        "hourly_count": hours,
+        "most_active_month": max_month,#used
+        "month_correlation": month_corr,#used
+        "monthly_chats_count": months,#used
+        "most_active_hour": max_hour,#used
+        "hourly_count": hours,#used
         # "most_active_day": most_active_day(df),
-        "longest_gap": longest_wait(df),
-        "who_texts_first": who_texts_first(df),
-        "most_used_emoji": top_10_emoji[0],
-        "top_10_emojis": top_10_emoji,
+        "longest_gap": longest_wait(df),#used
+        "who_texts_first": who_texts_first(df),#used
+        # "most_used_emoji": top_10_emoji[0],
+        "top_10_emojis": top_10_emoji,#used
         # "most_used_word": cloud_words[0],
         # "word_cloud_words": cloud_words,
-        "word_cloud_base64": word_cloud_to_base64(df),
+        "word_cloud_base64": word_cloud_to_base64(df),#used
     }
