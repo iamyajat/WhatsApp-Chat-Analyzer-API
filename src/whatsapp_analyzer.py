@@ -306,8 +306,8 @@ def word_cloud(df):
     wordcloud = WordCloud(
         font_path="assets/fonts/Poppins-Medium.ttf",
         # mask=mask_arr,
-        width=540,
-        height=720,
+        width=450,
+        height=600,
         stopwords=stopwords,
         min_font_size=10,
         colormap="rainbow",
