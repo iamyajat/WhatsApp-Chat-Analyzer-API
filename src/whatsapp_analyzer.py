@@ -376,7 +376,7 @@ def wrap(chats):
     df = getYear2021(chats_to_df(chats))
     chat_members = members(df)
     num_arr = no_of_messages_per_member(df)
-    words = word_count(df)
+    # words = word_count(df)
     months, month_corr = chats_month(df)
     # get max month
     max_month = months[0]
@@ -389,30 +389,30 @@ def wrap(chats):
         if h["count"] > max_hour["count"]:
             max_hour = h
     top_10_emoji = most_used_emoji(df)
-    cloud_words = word_cloud_words(df)
+    # cloud_words = word_cloud_words(df)
     z, p = zscore(len(df.index))
 
     return {
         "group": len(chat_members) > 2,
         "members": chat_members,
-        "gender": get_category(chat_members),
+        # "gender": get_category(chat_members),
         "total_no_of_chats": len(df.index),
         "top_percent": (1 - p),
-        "z_score": z,
-        "most_active_member": num_arr[0],
+        # "z_score": z,
+        # "most_active_member": num_arr[0],
         "no_of_messages_per_member": num_arr,
-        "word_count_per_member": words,
+        # "word_count_per_member": words,
         "most_active_month": max_month,
         "month_correlation": month_corr,
         "monthly_chats_count": months,
         "most_active_hour": max_hour,
         "hourly_count": hours,
-        "most_active_day": most_active_day(df),
+        # "most_active_day": most_active_day(df),
         "longest_gap": longest_wait(df),
         "who_texts_first": who_texts_first(df),
         "most_used_emoji": top_10_emoji[0],
         "top_10_emojis": top_10_emoji,
-        "most_used_word": cloud_words[0],
-        "word_cloud_words": cloud_words,
+        # "most_used_word": cloud_words[0],
+        # "word_cloud_words": cloud_words,
         "word_cloud_base64": word_cloud_to_base64(df),
     }
