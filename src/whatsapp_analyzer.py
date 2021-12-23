@@ -246,7 +246,7 @@ def longest_wait(df):
 
 def who_texts_first(df):
     df = get_time_diff(df)
-    df = df[df["time_diff"] > timedelta(minutes=30)]
+    df = df[df["time_diff"] > timedelta(minutes=60)]
     send_counts = df["sender"].value_counts().to_dict()
     max_send_counts = max(send_counts, key=send_counts.get)
     return max_send_counts
@@ -275,7 +275,6 @@ def words_weight(df):
         for i in range(len(tokens)):
             tokens[i] = tokens[i].lower()
         chat_words += " ".join(tokens) + " "
-    # remove links
     chat_words = re.sub(r"http\S+", "", chat_words)
     return chat_words
 
@@ -394,25 +393,25 @@ def wrap(chats):
 
     return {
         "group": len(chat_members) > 2,
-        "members": chat_members, #used
+        "members": chat_members,
         # "gender": get_category(chat_members),
         # "total_no_of_chats": len(df.index),
-        "top_percent": (1 - p),#used
+        "top_percent": (1 - p),
         # "z_score": z,
         # "most_active_member": num_arr[0],
-        "no_of_messages_per_member": num_arr,#used
+        "no_of_messages_per_member": num_arr,
         # "word_count_per_member": words,
-        "most_active_month": max_month,#used
-        "month_correlation": month_corr,#used
-        "monthly_chats_count": months,#used
-        "most_active_hour": max_hour,#used
-        "hourly_count": hours,#used
+        "most_active_month": max_month,
+        "month_correlation": month_corr,
+        "monthly_chats_count": months,
+        "most_active_hour": max_hour,
+        "hourly_count": hours,
         # "most_active_day": most_active_day(df),
-        "longest_gap": longest_wait(df),#used
-        "who_texts_first": who_texts_first(df),#used
+        "longest_gap": longest_wait(df),
+        "who_texts_first": who_texts_first(df),
         # "most_used_emoji": top_10_emoji[0],
-        "top_10_emojis": top_10_emoji,#used
+        "top_10_emojis": top_10_emoji,
         # "most_used_word": cloud_words[0],
         # "word_cloud_words": cloud_words,
-        "word_cloud_base64": word_cloud_to_base64(df),#used
+        "word_cloud_base64": word_cloud_to_base64(df),
     }
