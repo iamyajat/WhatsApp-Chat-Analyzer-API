@@ -21,13 +21,22 @@ import io
 stopwords = set(STOPWORDS)
 
 
-def time_extractor(x):
-    y = x.find(" - ")
-    return x[:y]
+def time_extractor(x, phone):
+    y = 0
+    if phone == "IOS":
+        y = x.find("] ")
+        return x[1:y]
+    else:
+        y = x.find(" - ")
+        return x[:y]
 
 
-def chat_extractor(x):
-    y = x.find(" - ") + 3
+def chat_extractor(x, phone):
+    y = 0
+    if phone == "IOS":
+        y = x.find("] ") + 2
+    else:
+        y = x.find(" - ") + 3
     return x[y:]
 
 
@@ -50,6 +59,16 @@ def message_extractor(x):
         s == "<Media omitted>"
         or s == "This message was deleted"
         or s == "You deleted this message"
+        or s.find("image omitted") != -1
+        or s.find("video omitted") != -1
+        or s.find("audio omitted") != -1
+        or s.find("file omitted") != -1
+        or s.find("sticker omitted") != -1
+        or s.find("gif omitted") != -1
+        or s.find("voice omitted") != -1
+        or s.find("contact omitted") != -1
+        or s.find("location omitted") != -1
+        or s.find("document omitted") != -1
     ):
         return np.nan
     else:
@@ -68,22 +87,30 @@ def check_dates(dates):
 
 
 def chats_to_df(chats):
+    REGEX = {
+        "IOS": "^[{1}[0-9]+/[0-9]+/[0-9]+,\s[0-9]+:[0-9]+:[0-9]+\s.*$",
+        "ANDROID": "^[0-9]+/[0-9]+/[0-9]+,\s[0-9]+:[0-9]+\s.*$",
+    }
     new_chats = []
+    phone = "ANDROID"
+    if chats[0].find(" - ") == -1:
+        phone = "IOS"
     c = 0
     i = 0
     while i < len(chats):
+        chats[i] = chats[i].replace("\u200e", "").replace("\r", "")
         new_chats.append(chats[i])
         i += 1
         while i < len(chats) and not bool(
-            re.search("^[0-9]+/[0-9]+/[0-9]+,\s[0-9]+:[0-9]+\s.*$", chats[i])
+            re.search(REGEX[phone], chats[i])
         ):
             new_chats[c] += "\n" + chats[i]
             i += 1
         c += 1
 
     wa_data = pd.DataFrame(new_chats, columns=["chats"])
-    wa_data["time"] = wa_data["chats"].apply(time_extractor)
-    wa_data["person_chat"] = wa_data["chats"].apply(chat_extractor)
+    wa_data["time"] = wa_data["chats"].apply(time_extractor, args=(phone,))
+    wa_data["person_chat"] = wa_data["chats"].apply(chat_extractor, args=(phone,))
     wa_data["person"] = wa_data["person_chat"].apply(person_extractor)
     wa_data["message"] = wa_data["person_chat"].apply(message_extractor)
 
@@ -105,6 +132,8 @@ def members(df):
 
 def getYear2021(df):
     df = df[df["time"].dt.year == 2021]
+    df.reset_index(drop=True, inplace=True)
+    df.dropna(inplace=True)
     df.reset_index(drop=True, inplace=True)
     return df
 
@@ -130,7 +159,6 @@ def no_of_messages_per_member(df):
 def word_count(df):
     df = df.copy()
     df["no_of_words"] = df["message"].apply(lambda x: len(str(x).split()))
-    df.dropna(inplace=True)
     df = df.reset_index(drop=True)
     members = df["sender"].unique()
     word_count = {member: 0 for member in members}
@@ -205,7 +233,6 @@ def get_category(names):
 
 
 def most_used_emoji(df):
-    df = df.dropna()
     emoji_list = df["message"].apply(extract_emojis).tolist()
     emoji_str = "".join(emoji_list)
     res = Counter(emoji_str)
@@ -225,8 +252,6 @@ def chats_hour(df):
 
 
 def get_time_diff(df):
-    df = df.dropna()
-    df.reset_index(drop=True, inplace=True)
     df["time_diff"] = df["time"].diff()
     return df
 
@@ -237,8 +262,10 @@ def longest_wait(df):
     max_gap = df1["time_diff"].max()
     date1 = df1["time"].iloc[0]
     date2 = date1 - max_gap
+    #convert max_gap to int 64
+    max_gap = int(max_gap.total_seconds())
     return {
-        "gap": max_gap * 1000,
+        "gap": int(max_gap) * 1000,
         "start_time": int(date2.timestamp() * 1000),
         "end_time": int(date1.timestamp() * 1000),
     }
@@ -254,7 +281,6 @@ def who_texts_first(df):
 
 def throwback_chats(chats, n):
     df = chats_to_df(chats)
-    df = df.dropna()
     df = df.drop("time", axis=1)
     x = df["sender"].size
     if x > n:
@@ -267,7 +293,6 @@ def throwback_chats(chats, n):
 
 
 def words_weight(df):
-    df = df.dropna()
     chat_words = ""
     for val in df["message"]:
         val = str(val)
@@ -305,10 +330,11 @@ def word_cloud(df):
     wordcloud = WordCloud(
         font_path="assets/fonts/Poppins-Medium.ttf",
         # mask=mask_arr,
-        width=450,
-        height=600,
+        min_word_length=2,
+        width=360,
+        height=480,
         stopwords=stopwords,
-        min_font_size=10,
+        min_font_size=12,
         colormap="rainbow",
     ).generate(chat_words)
 
@@ -373,6 +399,7 @@ def analyze(chats):
 
 def wrap(chats):
     df = getYear2021(chats_to_df(chats))
+    total_chats = len(df["message"])
     chat_members = members(df)
     num_arr = no_of_messages_per_member(df)
     # words = word_count(df)
@@ -395,7 +422,7 @@ def wrap(chats):
         "group": len(chat_members) > 2,
         "members": chat_members,
         # "gender": get_category(chat_members),
-        "total_no_of_chats": len(df.index),
+        "total_no_of_chats": total_chats,
         "top_percent": (1 - p),
         # "z_score": z,
         # "most_active_member": num_arr[0],
