@@ -425,7 +425,7 @@ def wrap(chats):
         "total_no_of_chats": total_chats,
         "top_percent": (1 - p),
         # "z_score": z,
-        # "most_active_member": num_arr[0],
+        "most_active_member": num_arr[0],
         "no_of_messages_per_member": num_arr,
         # "word_count_per_member": words,
         "most_active_month": max_month,
