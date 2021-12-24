@@ -395,7 +395,7 @@ def wrap(chats):
         "group": len(chat_members) > 2,
         "members": chat_members,
         # "gender": get_category(chat_members),
-        # "total_no_of_chats": len(df.index),
+        "total_no_of_chats": len(df.index),
         "top_percent": (1 - p),
         # "z_score": z,
         # "most_active_member": num_arr[0],
