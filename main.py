@@ -108,7 +108,6 @@ async def wrap(file: UploadFile = File(...)):
             status_code=400, detail="Please upload .txt or .zip files only!"
         )
     contents = await file.read()
-    print(type(contents))
     decoded_contents = ""
     if file_type == "zip" or file_type == "ZIP":
         try:
