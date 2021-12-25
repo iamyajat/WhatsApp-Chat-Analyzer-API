@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import PlainTextResponse
 
+
 app = FastAPI(
     title="WhatsApp Analyzer",
     version="1.0",
@@ -100,11 +101,24 @@ async def word_cloud(file: UploadFile = File(...)):
 @app.post("/wrap")
 async def wrap(file: UploadFile = File(...)):
     """WhatsApp Wrap 2021"""
-    extension = file.filename.split(".")[-1] in ("txt", "TXT")
+    file_type = file.filename.split(".")[-1]
+    extension = file_type in ("txt", "TXT", "zip", "ZIP")
     if not extension:
-        raise HTTPException(status_code=400, detail="Please upload .txt files only!")
+        raise HTTPException(
+            status_code=400, detail="Please upload .txt or .zip files only!"
+        )
     contents = await file.read()
-    decoded_contents = contents.decode("utf-8")
+    print(type(contents))
+    decoded_contents = ""
+    if file_type == "zip" or file_type == "ZIP":
+        try:
+            decoded_contents = wa.extract_zip(contents)["_chat.txt"].decode("utf-8")
+        except:
+            raise HTTPException(
+                status_code=400, detail="Zip file is corrupted! Please try again."
+            )
+    else:
+        decoded_contents = contents.decode("utf-8")
     chats = split("\n", decoded_contents)
     resp = wa.wrap(chats)
     return resp

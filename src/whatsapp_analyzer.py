@@ -14,12 +14,17 @@ import requests
 import scipy.stats as st
 import base64
 import io
+from zipfile import ZipFile
 
 # from PIL import Image
 
 
 stopwords = set(STOPWORDS)
 
+
+def extract_zip(input_zip):
+    input_zip=ZipFile(io.BytesIO(input_zip))
+    return {name: input_zip.read(name) for name in input_zip.namelist()}
 
 def time_extractor(x, phone):
     y = 0
