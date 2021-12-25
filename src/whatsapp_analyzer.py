@@ -101,9 +101,7 @@ def chats_to_df(chats):
         chats[i] = chats[i].replace("\u200e", "").replace("\r", "")
         new_chats.append(chats[i])
         i += 1
-        while i < len(chats) and not bool(
-            re.search(REGEX[phone], chats[i])
-        ):
+        while i < len(chats) and not bool(re.search(REGEX[phone], chats[i])):
             new_chats[c] += "\n" + chats[i]
             i += 1
         c += 1
@@ -262,7 +260,7 @@ def longest_wait(df):
     max_gap = df1["time_diff"].max()
     date1 = df1["time"].iloc[0]
     date2 = date1 - max_gap
-    #convert max_gap to int 64
+    # convert max_gap to int 64
     max_gap = int(max_gap.total_seconds())
     return {
         "gap": int(max_gap) * 1000,
@@ -275,6 +273,8 @@ def who_texts_first(df):
     df = get_time_diff(df)
     df = df[df["time_diff"] > timedelta(minutes=60)]
     send_counts = df["sender"].value_counts().to_dict()
+    if len(send_counts) == 0:
+        return "No one"
     max_send_counts = max(send_counts, key=send_counts.get)
     return max_send_counts
 
