@@ -1,4 +1,4 @@
-# WhatsApp Wrapped by OurChatStory
+# WhatsApp Chat Analyzer API
 An API to analyse WhatsApp chats and generate insights
 
 ## API Docs
@@ -7,7 +7,7 @@ https://wa-chat-analyzer.herokuapp.com/docs
 
 ## Implementation
 ![Site Screenshot](https://github.com/anshulagx/OurChatStory-Web/blob/main/public/logo192.png)
-<br/>[WhatsApp Wrapped by OurChatStory.co](https://ourchatstory.co/)
+<br/>[#WhatsAppWrapped by OurChatStory.co](https://ourchatstory.co/)
 
 ## Features
 
