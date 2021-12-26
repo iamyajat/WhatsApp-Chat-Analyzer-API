@@ -23,8 +23,9 @@ stopwords = set(STOPWORDS)
 
 
 def extract_zip(input_zip):
-    input_zip=ZipFile(io.BytesIO(input_zip))
+    input_zip = ZipFile(io.BytesIO(input_zip))
     return {name: input_zip.read(name) for name in input_zip.namelist()}
+
 
 def time_extractor(x, phone):
     y = 0
@@ -430,7 +431,7 @@ def wrap(chats):
         "total_no_of_chats": total_chats,
         "top_percent": (1 - p),
         # "z_score": z,
-        "most_active_member": num_arr[0],
+        "most_active_member": num_arr[0] if len(num_arr) != 0 else "No one",
         "no_of_messages_per_member": num_arr,
         # "word_count_per_member": words,
         "most_active_month": max_month,
