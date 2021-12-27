@@ -261,18 +261,25 @@ def get_time_diff(df):
 
 
 def longest_wait(df):
-    df = get_time_diff(df)
-    df1 = df[df["time_diff"] == df["time_diff"].max()]
-    max_gap = df1["time_diff"].max()
-    date1 = df1["time"].iloc[0]
-    date2 = date1 - max_gap
-    # convert max_gap to int 64
-    max_gap = int(max_gap.total_seconds())
-    return {
-        "gap": int(max_gap) * 1000,
-        "start_time": int(date2.timestamp() * 1000),
-        "end_time": int(date1.timestamp() * 1000),
-    }
+    try:
+        df = get_time_diff(df)
+        df1 = df[df["time_diff"] == df["time_diff"].max()]
+        max_gap = df1["time_diff"].max()
+        date1 = df1["time"].iloc[0]
+        date2 = date1 - max_gap
+        # convert max_gap to int 64
+        max_gap = int(max_gap.total_seconds())
+        return {
+            "gap": int(max_gap) * 1000,
+            "start_time": int(date2.timestamp() * 1000),
+            "end_time": int(date1.timestamp() * 1000),
+        }
+    except:
+        return {
+            "gap": 0,
+            "start_time": 0,
+            "end_time": 0,
+        }
 
 
 def who_texts_first(df):
