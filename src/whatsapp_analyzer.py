@@ -314,6 +314,8 @@ def words_weight(df):
             tokens[i] = tokens[i].lower()
         chat_words += " ".join(tokens) + " "
     chat_words = re.sub(r"http\S+", "", chat_words)
+    if chat_words.strip() == "":
+        return "no chat available"
     return chat_words
 
 
