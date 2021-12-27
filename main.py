@@ -120,4 +120,7 @@ async def wrap(file: UploadFile = File(...)):
         decoded_contents = contents.decode("utf-8")
     chats = split("\n", decoded_contents)
     resp = wa.wrap(chats)
-    return resp
+    if resp != None:
+        return resp
+    else:
+        raise HTTPException(status_code=400, detail="Not enough chats to analyze!")
