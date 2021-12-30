@@ -429,6 +429,9 @@ def wrap(chats):
         return None
     total_chats = len(df["message"])
     chat_members = members(df)
+    num_members = len(chat_members)
+    if num_members < 2:
+        return None
     num_arr = no_of_messages_per_member(df)
     # words = word_count(df)
     months, month_corr = chats_month(df)

@@ -123,4 +123,4 @@ async def wrap(file: UploadFile = File(...)):
     if resp != None:
         return resp
     else:
-        raise HTTPException(status_code=400, detail="Not enough chats to analyze from 2021!")
+        raise HTTPException(status_code=400, detail="Not enough members or chats to analyze from 2021!")
