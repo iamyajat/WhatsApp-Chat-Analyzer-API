@@ -239,7 +239,13 @@ def get_category(names):
 def most_used_emoji(df):
     emoji_list = df["message"].apply(extract_emojis).tolist()
     emoji_str = "".join(emoji_list)
-    emoji_str = emoji_str.replace("\U0001f3fb", "").replace("\U0001f3fc", "").replace("\U0001f3fd", "").replace("\U0001f3fe", "").replace("\U0001f3ff", "")
+    emoji_str = (
+        emoji_str.replace("\U0001f3fb", "")
+        .replace("\U0001f3fc", "")
+        .replace("\U0001f3fd", "")
+        .replace("\U0001f3fe", "")
+        .replace("\U0001f3ff", "")
+    )
     res = Counter(emoji_str)
     top_10 = res.most_common(10)
     top_10_list = [{"emoji": x[0], "count": x[1]} for x in top_10]
@@ -316,7 +322,7 @@ def words_weight(df):
         chat_words += " ".join(tokens) + " "
     chat_words = re.sub(r"http\S+", "", chat_words)
     if chat_words.strip() == "":
-        return "no chat available"
+        return "chat unavailable"
     return chat_words
 
 
@@ -342,7 +348,6 @@ def word_cloud_words(df):
 def word_cloud(df):
     chat_words = words_weight(df)
     # mask_arr = np.array(Image.open("assets/masks/walogo.jpg"))
-
     wordcloud = WordCloud(
         font_path="assets/fonts/Poppins-Medium.ttf",
         # mask=mask_arr,
@@ -352,9 +357,14 @@ def word_cloud(df):
         stopwords=stopwords,
         min_font_size=12,
         colormap="rainbow",
-    ).generate(chat_words)
+    )
+    wc = None
+    try:
+        wc = wordcloud.generate(chat_words)
+    except:
+        wc = wordcloud.generate("chat unavailable")
 
-    return wordcloud
+    return wc
 
 
 def get_word_cloud(chats):
