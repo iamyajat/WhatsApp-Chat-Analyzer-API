@@ -239,6 +239,7 @@ def get_category(names):
 def most_used_emoji(df):
     emoji_list = df["message"].apply(extract_emojis).tolist()
     emoji_str = "".join(emoji_list)
+    emoji_str = emoji_str.replace("\U0001f3fb", "").replace("\U0001f3fc", "").replace("\U0001f3fd", "").replace("\U0001f3fe", "").replace("\U0001f3ff", "")
     res = Counter(emoji_str)
     top_10 = res.most_common(10)
     top_10_list = [{"emoji": x[0], "count": x[1]} for x in top_10]
