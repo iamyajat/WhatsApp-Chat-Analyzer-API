@@ -100,7 +100,7 @@ async def word_cloud(file: UploadFile = File(...)):
 
 @app.post("/wrap")
 async def wrap(file: UploadFile = File(...)):
-    """WhatsApp Wrap 2021"""
+    """WhatsApp Wrap 2022"""
     file_type = file.filename.split(".")[-1]
     extension = file_type in ("txt", "TXT", "zip", "ZIP")
     if not extension:
@@ -123,4 +123,4 @@ async def wrap(file: UploadFile = File(...)):
     if resp != None:
         return resp
     else:
-        raise HTTPException(status_code=400, detail="Not enough members or chats to analyze from 2021!")
+        raise HTTPException(status_code=400, detail="Not enough members or chats to analyze from 2022!")

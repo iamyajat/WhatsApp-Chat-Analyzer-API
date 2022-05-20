@@ -94,7 +94,7 @@ def check_dates(dates):
 
 def chats_to_df(chats):
     REGEX = {
-        "IOS": "^[{1}[0-9]+/[0-9]+/[0-9]+,\s[0-9]+:[0-9]+:[0-9]+.*$",
+        "IOS": "^[{1}[0-9]+[\/|\–|\-][0-9]+[\/|\–|\-][0-9]+,?\s[0-9]+:[0-9]+:[0-9]+.*$",
         "ANDROID": "^[0-9]+/[0-9]+/[0-9]+,\s[0-9]+:[0-9]+\s.*$",
     }
     new_chats = []
@@ -118,6 +118,8 @@ def chats_to_df(chats):
     wa_data["person"] = wa_data["person_chat"].apply(person_extractor)
     wa_data["message"] = wa_data["person_chat"].apply(message_extractor)
 
+    wa_data["time"] = wa_data["time"].apply(lambda x: x.replace("–", "/").replace("-", "/"))
+
     dayfirst = check_dates(list(wa_data["time"]))
     wa_data["time"] = pd.to_datetime(wa_data["time"], dayfirst=dayfirst)
 
@@ -134,8 +136,8 @@ def members(df):
     return chat_members
 
 
-def getYear2021(df):
-    df = df[df["time"].dt.year == 2021]
+def getYear2022(df):
+    df = df[df["time"].dt.year == 2022]
     df.reset_index(drop=True, inplace=True)
     df.dropna(inplace=True)
     df.reset_index(drop=True, inplace=True)
@@ -424,7 +426,7 @@ def analyze(chats):
 
 
 def wrap(chats):
-    df = getYear2021(chats_to_df(chats))
+    df = getYear2022(chats_to_df(chats))
     if df.shape[0] < 15:
         return None
     total_chats = len(df["message"])
