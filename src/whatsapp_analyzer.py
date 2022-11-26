@@ -451,6 +451,11 @@ def wrap(chats):
     # cloud_words = word_cloud_words(df)
     z, p = zscore(len(df.index))
 
+    if(chat_members):
+        print(chat_members)
+    else:
+        "No members found"
+
     return {
         "group": len(chat_members) > 2,
         "members": chat_members,
