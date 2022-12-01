@@ -75,6 +75,7 @@ def message_extractor(x):
         or s.find("contact omitted") != -1
         or s.find("location omitted") != -1
         or s.find("document omitted") != -1
+        or s.find("<MEDIA>") != -1
     ):
         return np.nan
     else:
@@ -94,7 +95,7 @@ def check_dates(dates):
 
 def chats_to_df(chats):
     REGEX = {
-        "IOS": "^[{1}[0-9]+[\/|\–|\-][0-9]+[\/|\–|\-][0-9]+,?\s[0-9]+:[0-9]+:[0-9]+.*$",
+        "IOS": "^[{1}[0-9]+[\/|\–|\-|\.][0-9]+[\/|\–|\-|\.][0-9]+,?\s[0-9]+:[0-9]+:[0-9]+.*$",
         "ANDROID": "^[0-9]+/[0-9]+/[0-9]+,\s[0-9]+:[0-9]+\s.*$",
     }
     new_chats = []
