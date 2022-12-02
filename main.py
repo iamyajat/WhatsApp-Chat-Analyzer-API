@@ -11,7 +11,7 @@ from fastapi.responses import PlainTextResponse
 
 app = FastAPI(
     title="WhatsApp Analyzer",
-    version="1.0",
+    version="2.0",
     description="Get beautiful insights about your chats!",
 )
 
@@ -103,6 +103,7 @@ async def wrap(file: UploadFile = File(...)):
     """WhatsApp Wrap 2022"""
     file_type = file.filename.split(".")[-1]
     extension = file_type in ("txt", "TXT", "zip", "ZIP")
+    print(file.filename.split(".")[0], end=" => ")
     if not extension:
         raise HTTPException(
             status_code=400, detail="Please upload .txt or .zip files only!"
@@ -123,4 +124,6 @@ async def wrap(file: UploadFile = File(...)):
     if resp != None:
         return resp
     else:
-        raise HTTPException(status_code=400, detail="Not enough members or chats to analyze from 2022!")
+        raise HTTPException(
+            status_code=400, detail="Not enough members or chats to analyze from 2022!"
+        )

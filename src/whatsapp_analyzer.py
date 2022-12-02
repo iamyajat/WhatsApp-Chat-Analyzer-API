@@ -4,22 +4,22 @@ import re
 import json
 import datetime
 import random
-from wordcloud import WordCloud, STOPWORDS
+from wordcloud import WordCloud
 import emoji
 from collections import Counter
 from datetime import timedelta
 import time
 from dateutil import tz
+import pickle
 import requests
 import scipy.stats as st
 import base64
 import io
 from zipfile import ZipFile
+from src.interesting_search import get_total_minutes
 
-# from PIL import Image
-
-
-stopwords = set(STOPWORDS)
+with open("./assets/stopwords/stop_words.pkl", "rb") as f:
+    stopwords = pickle.load(f)
 
 
 def extract_zip(input_zip):
@@ -119,7 +119,9 @@ def chats_to_df(chats):
     wa_data["person"] = wa_data["person_chat"].apply(person_extractor)
     wa_data["message"] = wa_data["person_chat"].apply(message_extractor)
 
-    wa_data["time"] = wa_data["time"].apply(lambda x: x.replace("-", "/").replace(".", "/"))
+    wa_data["time"] = wa_data["time"].apply(
+        lambda x: x.replace("–", "/").replace("-", "/").replace(".", "/")
+    )
 
     dayfirst = check_dates(list(wa_data["time"]))
     wa_data["time"] = pd.to_datetime(wa_data["time"], dayfirst=dayfirst)
@@ -146,7 +148,7 @@ def getYear2022(df):
 
 
 def extract_emojis(s):
-    return "".join(c for c in s if c in emoji.UNICODE_EMOJI["en"])
+    return "".join(c for c in s if c in emoji.EMOJI_DATA)
 
 
 def chats_to_json(chats):
@@ -208,6 +210,51 @@ def chats_month(df):
     month_df["month_codes"] = pd.Series(range(1, 13))
     month_corr = month_df["month_codes"].corr(month_df["count"])
     return month_count, month_corr
+
+
+def chats_date(df):
+    df["date"] = pd.DatetimeIndex(df["time"]).date
+
+
+def check_chat_date(df, date):
+    return date in df["date"].unique()
+
+
+def convert_long_to_date(long_date):
+    dt = datetime.datetime.fromtimestamp(long_date / 1000)
+    date = datetime.date(dt.year, dt.month, dt.day)
+    return date
+
+
+def get_chat_date_string(df, longest_break_start, longest_break_end):
+    chats_date(df)
+    result_chat_date = ""
+    first_day = False
+    # loop through all of the days in the year and check if there is a chat on that day
+    for month in range(1, 13):
+        for day in range(1, 32):
+            try:
+                d = datetime.date(2022, month, day)
+            except ValueError:
+                continue
+            if (not first_day) and check_chat_date(df, d):
+                first_day = True
+
+            if first_day:
+                start_gap = convert_long_to_date(longest_break_start)
+                end_gap = convert_long_to_date(longest_break_end)
+                if d > start_gap and d < end_gap:
+                    result_chat_date += "2"
+                    continue
+                if check_chat_date(df, d):
+                    result_chat_date += "0"
+                else:
+                    result_chat_date += "1"
+
+            else:
+                result_chat_date += "9"
+
+    return result_chat_date
 
 
 def get_gender(name):
@@ -438,6 +485,7 @@ def wrap(chats):
     num_arr = no_of_messages_per_member(df)
     # words = word_count(df)
     months, month_corr = chats_month(df)
+
     # get max month
     max_month = months[0]
     for m in months:
@@ -452,16 +500,23 @@ def wrap(chats):
     # cloud_words = word_cloud_words(df)
     z, p = zscore(len(df.index))
 
-    if(chat_members):
+    if chat_members:
         print(chat_members)
     else:
         "No members found"
+
+    longest_gap = longest_wait(df)
+
+    talk_string = get_chat_date_string(
+        df, longest_gap["start_time"], longest_gap["end_time"]
+    )
 
     return {
         "group": len(chat_members) > 2,
         "members": chat_members,
         # "gender": get_category(chat_members),
         "total_no_of_chats": total_chats,
+        "total_no_of_minutes": get_total_minutes(df),
         "top_percent": (1 - p),
         # "z_score": z,
         "most_active_member": num_arr[0] if len(num_arr) != 0 else "No one",
@@ -472,8 +527,9 @@ def wrap(chats):
         "monthly_chats_count": months,
         "most_active_hour": max_hour,
         "hourly_count": hours,
-        # "most_active_day": most_active_day(df),
-        "longest_gap": longest_wait(df),
+        "most_active_day": most_active_day(df),
+        "longest_gap": longest_gap,
+        "no_talk_string": talk_string,
         "who_texts_first": who_texts_first(df),
         # "most_used_emoji": top_10_emoji[0],
         "top_10_emojis": top_10_emoji,
