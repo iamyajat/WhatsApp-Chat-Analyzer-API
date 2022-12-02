@@ -406,7 +406,7 @@ def word_cloud(df):
         height=480,
         stopwords=stopwords,
         min_font_size=12,
-        colormap="rainbow",
+        colormap="gist_ncar",
     )
     wc = None
     try:
