@@ -119,7 +119,7 @@ def chats_to_df(chats):
     wa_data["person"] = wa_data["person_chat"].apply(person_extractor)
     wa_data["message"] = wa_data["person_chat"].apply(message_extractor)
 
-    wa_data["time"] = wa_data["time"].apply(lambda x: x.replace("–", "/").replace("-", "/").replace(".", "/"))
+    wa_data["time"] = wa_data["time"].apply(lambda x: x.replace("-", "/").replace(".", "/"))
 
     dayfirst = check_dates(list(wa_data["time"]))
     wa_data["time"] = pd.to_datetime(wa_data["time"], dayfirst=dayfirst)
