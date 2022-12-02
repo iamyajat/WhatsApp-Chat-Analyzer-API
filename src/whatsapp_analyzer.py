@@ -21,7 +21,6 @@ from src.interesting_search import get_total_minutes
 # from nltk.corpus import stopwords
 
 
-
 stopwords = set(STOPWORDS)
 
 
@@ -122,7 +121,9 @@ def chats_to_df(chats):
     wa_data["person"] = wa_data["person_chat"].apply(person_extractor)
     wa_data["message"] = wa_data["person_chat"].apply(message_extractor)
 
-    wa_data["time"] = wa_data["time"].apply(lambda x: x.replace("-", "/").replace(".", "/"))
+    wa_data["time"] = wa_data["time"].apply(
+        lambda x: x.replace("–", "/").replace("-", "/").replace(".", "/")
+    )
 
     dayfirst = check_dates(list(wa_data["time"]))
     wa_data["time"] = pd.to_datetime(wa_data["time"], dayfirst=dayfirst)
@@ -149,7 +150,7 @@ def getYear2022(df):
 
 
 def extract_emojis(s):
-    return "".join(c for c in s if c in emoji.UNICODE_EMOJI["en"])
+    return "".join(c for c in s if c in emoji.EMOJI_DATA)
 
 
 def chats_to_json(chats):
@@ -455,7 +456,7 @@ def wrap(chats):
     # cloud_words = word_cloud_words(df)
     z, p = zscore(len(df.index))
 
-    if(chat_members):
+    if chat_members:
         print(chat_members)
     else:
         "No members found"
@@ -463,7 +464,7 @@ def wrap(chats):
     return {
         "group": len(chat_members) > 2,
         "members": chat_members,
-        "gender": get_category(chat_members),
+        # "gender": get_category(chat_members),
         "total_no_of_chats": total_chats,
         "total_no_of_minutes": get_total_minutes(df),
         "top_percent": (1 - p),
