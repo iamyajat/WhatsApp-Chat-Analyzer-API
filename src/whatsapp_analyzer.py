@@ -4,12 +4,13 @@ import re
 import json
 import datetime
 import random
-from wordcloud import WordCloud, STOPWORDS
+from wordcloud import WordCloud
 import emoji
 from collections import Counter
 from datetime import timedelta
 import time
 from dateutil import tz
+import pickle
 import requests
 import scipy.stats as st
 import base64
@@ -17,11 +18,8 @@ import io
 from zipfile import ZipFile
 from src.interesting_search import get_total_minutes
 
-# get stopwords from nltk
-# from nltk.corpus import stopwords
-
-
-stopwords = set(STOPWORDS)
+with open("./assets/stopwords/stop_words.pkl", "rb") as f:
+    stopwords = pickle.load(f)
 
 
 def extract_zip(input_zip):
@@ -231,6 +229,7 @@ def convert_long_to_date(long_date):
 def get_chat_date_string(df, longest_break_start, longest_break_end):
     chats_date(df)
     result_chat_date = ""
+    first_day = False
     # loop through all of the days in the year and check if there is a chat on that day
     for month in range(1, 13):
         for day in range(1, 32):
@@ -238,17 +237,23 @@ def get_chat_date_string(df, longest_break_start, longest_break_end):
                 d = datetime.date(2022, month, day)
             except ValueError:
                 continue
-            # 2 if the date is within the longest break
-            start_gap = convert_long_to_date(longest_break_start)
-            end_gap = convert_long_to_date(longest_break_end)
-            if d >= start_gap and d <= end_gap:
-                result_chat_date += "2"
-                continue
-            # 0 if there is no chat on this day else 1
-            if check_chat_date(df, d):
-                result_chat_date += "0"
+            if (not first_day) and check_chat_date(df, d):
+                first_day = True
+
+            if first_day:
+                start_gap = convert_long_to_date(longest_break_start)
+                end_gap = convert_long_to_date(longest_break_end)
+                if d > start_gap and d < end_gap:
+                    result_chat_date += "2"
+                    continue
+                if check_chat_date(df, d):
+                    result_chat_date += "0"
+                else:
+                    result_chat_date += "1"
+
             else:
-                result_chat_date += "1"
+                result_chat_date += "9"
+
     return result_chat_date
 
 
