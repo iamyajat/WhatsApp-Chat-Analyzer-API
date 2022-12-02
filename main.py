@@ -11,7 +11,7 @@ from fastapi.responses import PlainTextResponse
 
 app = FastAPI(
     title="WhatsApp Analyzer",
-    version="1.0",
+    version="2.0",
     description="Get beautiful insights about your chats!",
 )
 

@@ -15,8 +15,11 @@ import scipy.stats as st
 import base64
 import io
 from zipfile import ZipFile
+from src.interesting_search import get_total_minutes
 
-# from PIL import Image
+# get stopwords from nltk
+# from nltk.corpus import stopwords
+
 
 
 stopwords = set(STOPWORDS)
@@ -460,8 +463,9 @@ def wrap(chats):
     return {
         "group": len(chat_members) > 2,
         "members": chat_members,
-        # "gender": get_category(chat_members),
+        "gender": get_category(chat_members),
         "total_no_of_chats": total_chats,
+        "total_no_of_minutes": get_total_minutes(df),
         "top_percent": (1 - p),
         # "z_score": z,
         "most_active_member": num_arr[0] if len(num_arr) != 0 else "No one",
@@ -472,7 +476,7 @@ def wrap(chats):
         "monthly_chats_count": months,
         "most_active_hour": max_hour,
         "hourly_count": hours,
-        # "most_active_day": most_active_day(df),
+        "most_active_day": most_active_day(df),
         "longest_gap": longest_wait(df),
         "who_texts_first": who_texts_first(df),
         # "most_used_emoji": top_10_emoji[0],
