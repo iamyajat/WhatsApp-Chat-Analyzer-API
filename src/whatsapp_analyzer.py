@@ -214,6 +214,44 @@ def chats_month(df):
     return month_count, month_corr
 
 
+def chats_date(df):
+    df["date"] = pd.DatetimeIndex(df["time"]).date
+
+
+def check_chat_date(df, date):
+    return date in df["date"].unique()
+
+
+def convert_long_to_date(long_date):
+    dt = datetime.datetime.fromtimestamp(long_date / 1000)
+    date = datetime.date(dt.year, dt.month, dt.day)
+    return date
+
+
+def get_chat_date_string(df, longest_break_start, longest_break_end):
+    chats_date(df)
+    result_chat_date = ""
+    # loop through all of the days in the year and check if there is a chat on that day
+    for month in range(1, 13):
+        for day in range(1, 32):
+            try:
+                d = datetime.date(2022, month, day)
+            except ValueError:
+                continue
+            # 2 if the date is within the longest break
+            start_gap = convert_long_to_date(longest_break_start)
+            end_gap = convert_long_to_date(longest_break_end)
+            if d >= start_gap and d <= end_gap:
+                result_chat_date += "2"
+                continue
+            # 0 if there is no chat on this day else 1
+            if check_chat_date(df, d):
+                result_chat_date += "0"
+            else:
+                result_chat_date += "1"
+    return result_chat_date
+
+
 def get_gender(name):
     URL = "https://api.genderize.io"
     PARAMS = {"name": name}
@@ -442,6 +480,7 @@ def wrap(chats):
     num_arr = no_of_messages_per_member(df)
     # words = word_count(df)
     months, month_corr = chats_month(df)
+
     # get max month
     max_month = months[0]
     for m in months:
@@ -461,6 +500,12 @@ def wrap(chats):
     else:
         "No members found"
 
+    longest_gap = longest_wait(df)
+
+    talk_string = get_chat_date_string(
+        df, longest_gap["start_time"], longest_gap["end_time"]
+    )
+
     return {
         "group": len(chat_members) > 2,
         "members": chat_members,
@@ -478,7 +523,8 @@ def wrap(chats):
         "most_active_hour": max_hour,
         "hourly_count": hours,
         "most_active_day": most_active_day(df),
-        "longest_gap": longest_wait(df),
+        "longest_gap": longest_gap,
+        "no_talk_string": talk_string,
         "who_texts_first": who_texts_first(df),
         # "most_used_emoji": top_10_emoji[0],
         "top_10_emojis": top_10_emoji,
