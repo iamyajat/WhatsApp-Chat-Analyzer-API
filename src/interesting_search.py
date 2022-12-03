@@ -1,13 +1,15 @@
+import datetime
+import json
 import pandas as pd
 import numpy as np
 
 
-def count_per_minute(original_df):
-    df = original_df.copy()
+def count_per_minute(df):
     df["iso_time"] = df["time"].apply(lambda x: str(x)[:-3] + ":00")
     df["iso_time"] = pd.to_datetime(df["iso_time"], dayfirst=False)
     df["iso_time"] = df["iso_time"].astype(np.int64)
     df["iso_time"] = df["iso_time"].apply(lambda x: int(x / 60000000000))
+    df = df.copy()
     df = df.groupby(["iso_time"]).count()
 
     df["time"] = df.index
@@ -36,34 +38,45 @@ def interesting_search(original_df, count_df):
                 streak_end = i
             streak = 0
 
-    # print the streak
-    print("Longest streak of messages sent in a row: ", streak_end - streak_start)
-    print("Start time: ", count_df["time"][streak_start])
-    print("End time: ", count_df["time"][streak_end])
-    print("Total messages sent: ", count_df["count"][streak_start:streak_end].sum())
-    print(
-        "Average messages sent per minute: ",
-        count_df["count"][streak_start:streak_end].sum() / (streak_end - streak_start),
-    )
+    # stats for streak
+    longest_streak = streak_end - streak_start
+    longest_streak_start = count_df["time"][streak_start] * 60000
+    longest_streak_end = count_df["time"][streak_end] * 60000
+    total_messages_sent = count_df["count"][streak_start:streak_end].sum()
+    average_reply_time = (
+        original_df["time"][streak_end] - original_df["time"][streak_start]
+    ).total_seconds() / (streak_end - streak_start)
 
-    # Average reply time of streak in seconds
-    print(
-        "Average reply time of streak in seconds: ",
-        (
-            original_df["time"][streak_end] - original_df["time"][streak_start]
-        ).total_seconds()
-        / (streak_end - streak_start),
-    )
+    # print the stats
+    print("Longest streak: ", longest_streak)
+    print("Longest streak start: ", longest_streak_start)
+    print("Longest streak end: ", longest_streak_end)
+    print("Total messages sent: ", total_messages_sent)
+    print("Average reply time: ", average_reply_time)
 
     # find messages during longest streak
     original_df = original_df[
         original_df["iso_time"].isin(count_df["time"][streak_start:streak_end])
     ]
 
-    return original_df
+    odf_json_str = original_df[["time", "sender", "message"]].to_json(orient="records")
+    odf_json = json.loads(odf_json_str)
+    odf_json[-1]["message"] = odf_json[-1]["message"][:-1]
+
+    # return as dictionary
+    return {
+        "streak_duration": longest_streak,
+        "streak_start": int(longest_streak_start),
+        "streak_end": int(longest_streak_end),
+        "total_messages_sent": int(total_messages_sent),
+        "average_reply_time": float(average_reply_time),
+        # "messages_during_streak": odf_json,
+    }
+
+    return 0
 
 
 def get_total_minutes(df):
     count_df = count_per_minute(df)
     total_mins = count_df.shape[0]
-    return total_mins
+    return total_mins, count_df

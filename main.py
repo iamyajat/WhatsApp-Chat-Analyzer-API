@@ -14,6 +14,8 @@ app = FastAPI(
     description="Get beautiful insights about your chats!",
 )
 
+print("DOCS:", "http://127.0.0.1:8000/docs")
+
 
 app.add_middleware(
     CORSMiddleware,

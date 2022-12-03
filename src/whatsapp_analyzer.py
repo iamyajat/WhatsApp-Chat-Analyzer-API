@@ -17,7 +17,7 @@ import scipy.stats as st
 import base64
 import io
 from zipfile import ZipFile
-from src.interesting_search import get_total_minutes
+from src.interesting_search import get_total_minutes, interesting_search
 
 with open("./assets/stopwords/stop_words.pkl", "rb") as f:
     stopwords = pickle.load(f)
@@ -325,6 +325,7 @@ def get_time_diff(df):
 def longest_wait(df):
     try:
         df = get_time_diff(df)
+        # print(df["time_diff"].max())
         df1 = df[df["time_diff"] == df["time_diff"].max()]
         max_gap = df1["time_diff"].max()
         date1 = df1["time"].iloc[0]
@@ -346,8 +347,8 @@ def longest_wait(df):
 
 def who_texts_first(df):
     df = get_time_diff(df)
-    df = df[df["time_diff"] > timedelta(minutes=60)]
-    send_counts = df["sender"].value_counts().to_dict()
+    df1 = df[df["time_diff"] > timedelta(minutes=60)]
+    send_counts = df1["sender"].value_counts().to_dict()
     if len(send_counts) == 0:
         return "No one"
     max_send_counts = max(send_counts, key=send_counts.get)
@@ -462,6 +463,17 @@ def zscore(amt):
     return z, max(min(p, 0.999999), 0.0001)
 
 
+# get median of time difference
+def get_median_time_diff(df):
+    time_df_list = list(df["time_diff"])[1:]
+    time_df_list = [x.total_seconds() for x in time_df_list]
+    time_df_list.sort()
+    # print(time_df_list)
+    if len(time_df_list) == 0:
+        return 0
+    return np.median(time_df_list)
+
+
 def analyze(chats):
     df = chats_to_df(chats)
     chat_members = members(df)
@@ -516,23 +528,30 @@ def wrap(chats):
         df, longest_gap["start_time"], longest_gap["end_time"]
     )
 
+    total_mins, count_df = get_total_minutes(df)
+
+    # get median of time difference
+    median_time_diff = get_median_time_diff(df)
+
     return {
         "group": len(chat_members) > 2,
         "members": chat_members,
         # "gender": get_category(chat_members),
         "total_no_of_chats": total_chats,
-        "total_no_of_minutes": get_total_minutes(df),
+        "total_no_of_minutes": total_mins,
         "top_percent": (1 - p),
         # "z_score": z,
         "most_active_member": num_arr[0] if len(num_arr) != 0 else "No one",
         "no_of_messages_per_member": num_arr,
         # "word_count_per_member": words,
+        "median_reply_time": (median_time_diff / 60.0),
         "most_active_month": max_month,
         "month_correlation": month_corr,
         "monthly_chats_count": months,
         "most_active_hour": max_hour,
         "hourly_count": hours,
         "most_active_day": most_active_day(df),
+        "longest_session": interesting_search(df, count_df),
         "longest_gap": longest_gap,
         "no_talk_string": talk_string,
         "who_texts_first": who_texts_first(df),
