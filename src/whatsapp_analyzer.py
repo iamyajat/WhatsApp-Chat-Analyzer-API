@@ -1,3 +1,4 @@
+from http.client import HTTPException
 import numpy as np
 import pandas as pd
 import re
@@ -85,7 +86,11 @@ def message_extractor(x):
 def check_dates(dates):
     for date in dates:
         date = date[: date.find(", ")]
-        day, month, year = date.split("/")
+        try:
+            day, month, year = date.split("/")
+        except:
+            print("Invalid date format:", date)
+            raise HTTPException(status_code=500, detail="Invalid date format")
         try:
             datetime.datetime(int(year), int(month), int(day))
         except ValueError:

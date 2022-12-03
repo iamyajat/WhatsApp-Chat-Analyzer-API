@@ -1,12 +1,11 @@
 from re import split
 from fastapi import FastAPI, File, HTTPException, UploadFile
 import src.whatsapp_analyzer as wa
-from starlette.responses import StreamingResponse
-import io
 import matplotlib.pyplot as plt
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import PlainTextResponse
+from starlette.responses import RedirectResponse
 
 
 app = FastAPI(
@@ -33,7 +32,8 @@ async def http_exception_handler(request, exc):
 
 @app.get("/")
 async def root():
-    return {"message": "Service is up!"}
+    response = RedirectResponse(url="https://ourchatstory.co")
+    return response
 
 
 @app.post("/chats_to_json")
