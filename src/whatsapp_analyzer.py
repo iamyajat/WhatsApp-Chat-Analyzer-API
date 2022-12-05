@@ -581,8 +581,16 @@ def wrap(chats):
     ampm = "AM"
     if max_hour["hour"] >= 12:
         ampm = "PM"
-    print("Most active hour:\t ", str(m_hour)," ", ampm, " (", max_hour["hour"], ")", sep="")
-
+    print(
+        "Most active hour:\t ",
+        str(m_hour),
+        " ",
+        ampm,
+        " (",
+        max_hour["hour"],
+        ")",
+        sep="",
+    )
 
     print(
         "Most active day:\t "
@@ -604,6 +612,18 @@ def wrap(chats):
     longest_session = interesting_search(df, count_df)
 
     print("Longest gap:\t\t", longest_gap_in_days, "days")
+    print(
+        "Longest gap start:\t",
+        datetime.datetime.fromtimestamp(longest_gap["start_time"] / 1000).strftime(
+            "%B %d, %Y"
+        ),
+    )
+    print(
+        "Longest gap end:\t",
+        datetime.datetime.fromtimestamp(longest_gap["end_time"] / 1000).strftime(
+            "%B %d, %Y"
+        ),
+    )
 
     return {
         "group": len(chat_members) > 2,
