@@ -456,8 +456,8 @@ def most_active_day(df):
 
 
 def zscore(amt):
-    mean = 30000
-    std = 20000
+    mean = 22000
+    std = 12000
     z = (amt - mean) / std
     p = st.norm.cdf(z)
     return z, max(min(p, 0.999999), 0.0001)
@@ -472,6 +472,30 @@ def get_median_time_diff(df):
     if len(time_df_list) == 0:
         return 0
     return np.median(time_df_list)
+
+
+# get every 10%, 20%, 30%.... 90% of the time difference
+def get_time_diff_percentile(df):
+    time_df_list = list(df["time_diff"])[1:]
+    time_df_list = [x.total_seconds() for x in time_df_list]
+    time_df_list.sort()
+    # print(time_df_list)
+    if len(time_df_list) == 0:
+        return 0
+    percentiles = []
+    for i in range(1, 51):
+        percentiles.append(np.percentile(time_df_list, i * 2))
+    return percentiles
+
+
+# get the reponsiveness of the chat
+def get_responsiveness(df, percentiles):
+    # get the first greater than zero percentile
+    for i in range(len(percentiles)):
+        if percentiles[i] > 0:
+            print("Chat responsiveness:", (i / 50.0))
+            return i
+    return 0
 
 
 def analyze(chats):
@@ -495,6 +519,7 @@ def wrap(chats):
     if df.shape[0] < 15:
         return None
     total_chats = len(df["message"])
+    print("Total chats: " + str(total_chats))
     chat_members = members(df)
     num_members = len(chat_members)
     if num_members < 2:
@@ -517,6 +542,8 @@ def wrap(chats):
     # cloud_words = word_cloud_words(df)
     z, p = zscore(len(df.index))
 
+    top_percent = 1 - p
+
     if chat_members:
         print(chat_members)
     else:
@@ -524,14 +551,28 @@ def wrap(chats):
 
     longest_gap = longest_wait(df)
 
+
     talk_string = get_chat_date_string(
         df, longest_gap["start_time"], longest_gap["end_time"]
     )
 
     total_mins, count_df = get_total_minutes(df)
 
+    top_percent_100 = round(top_percent * 100, 2)
+    print("Top Percent: ", top_percent_100, "%", sep="")
+
     # get median of time difference
-    median_time_diff = get_median_time_diff(df)
+    # median_time_diff = get_median_time_diff(df)
+
+    # get every 10%, 20%, 30%.... 90% of the time difference
+    time_diff_percentile = get_time_diff_percentile(df)
+
+    # get the reponsiveness of the chat
+    responsiveness = get_responsiveness(df, time_diff_percentile)
+
+    longest_gap_in_days = int(longest_gap['gap']/(24*60*60*1000))
+
+    print("Longest gap:", longest_gap_in_days, "days")
 
     return {
         "group": len(chat_members) > 2,
@@ -539,12 +580,14 @@ def wrap(chats):
         # "gender": get_category(chat_members),
         "total_no_of_chats": total_chats,
         "total_no_of_minutes": total_mins,
-        "top_percent": (1 - p),
+        "top_percent": top_percent,
         # "z_score": z,
         "most_active_member": num_arr[0] if len(num_arr) != 0 else "No one",
         "no_of_messages_per_member": num_arr,
         # "word_count_per_member": words,
-        "median_reply_time": (median_time_diff / 60.0),
+        # "median_reply_time": (median_time_diff / 60.0),
+        # "reply_time_percentile": [x / 60.0 for x in time_diff_percentile],
+        "chat_responsiveness": responsiveness / 50.0,
         "most_active_month": max_month,
         "month_correlation": month_corr,
         "monthly_chats_count": months,
