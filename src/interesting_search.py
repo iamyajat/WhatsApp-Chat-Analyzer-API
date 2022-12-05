@@ -50,11 +50,11 @@ def interesting_search(original_df, count_df):
     longest_streak_end_dt = datetime.datetime.fromtimestamp(longest_streak_end / 1000)
 
     # print the stats
-    print("Longest streak: ", longest_streak)
-    print("Total messages sent: ", total_messages_sent)
-    print("Longest streak date: ", longest_streak_start_dt)
+    print("Longest streak:\t\t", longest_streak, "minutes")
+    print("Total messages sent:\t", total_messages_sent, "messages")
+    print("Longest streak date:\t", longest_streak_start_dt)
     # print("Longest streak end: ", longest_streak_end_dt)
-    print("Average reply time: ", average_reply_time)
+    print("Average reply time:\t", round(average_reply_time, 2), "seconds")
 
     # find messages during longest streak
     original_df = original_df[

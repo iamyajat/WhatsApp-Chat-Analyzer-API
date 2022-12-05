@@ -493,7 +493,7 @@ def get_responsiveness(df, percentiles):
     # get the first greater than zero percentile
     for i in range(len(percentiles)):
         if percentiles[i] > 0:
-            print("Chat responsiveness:", (i / 50.0))
+            print("Chat responsiveness:\t", (i / 50.0))
             return i
     return 0
 
@@ -519,7 +519,6 @@ def wrap(chats):
     if df.shape[0] < 15:
         return None
     total_chats = len(df["message"])
-    print("Total chats: " + str(total_chats))
     chat_members = members(df)
     num_members = len(chat_members)
     if num_members < 2:
@@ -545,7 +544,9 @@ def wrap(chats):
     top_percent = 1 - p
 
     if chat_members:
-        print(chat_members)
+        # print chat members
+        for member in chat_members:
+            print(member, end=" | ")
     else:
         "No members found"
 
@@ -557,9 +558,15 @@ def wrap(chats):
     )
 
     total_mins, count_df = get_total_minutes(df)
+    
+    print("\n\n---------------------------------------------")
+    print(" Chat Statistics")
+    print("---------------------------------------------")
+
+    print("Total chats:\t\t " + str(total_chats))
 
     top_percent_100 = round(top_percent * 100, 2)
-    print("Top Percent: ", top_percent_100, "%", sep="")
+    print("Top Percent:\t\t ", top_percent_100, "%", sep="")
 
     # get median of time difference
     # median_time_diff = get_median_time_diff(df)
@@ -572,7 +579,7 @@ def wrap(chats):
 
     longest_gap_in_days = int(longest_gap['gap']/(24*60*60*1000))
 
-    print("Longest gap:", longest_gap_in_days, "days")
+    print("Longest gap:\t\t", longest_gap_in_days, "days")
 
     return {
         "group": len(chat_members) > 2,
