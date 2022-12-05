@@ -56,7 +56,7 @@ def interesting_search(original_df, count_df):
     ).strftime("%B %d, %Y")
 
     # print the stats
-    print("Longest streak:\t\t", longest_streak, "minutes")
+    print("Longest streak:\t", longest_streak, "minutes")
     print("Total messages sent:\t", total_messages_sent, "messages")
     print("Longest streak date:\t", longest_streak_start_dt)
     # print("Longest streak end: ", longest_streak_end_dt)

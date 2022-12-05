@@ -18,6 +18,7 @@ import base64
 import io
 from zipfile import ZipFile
 from src.interesting_search import get_total_minutes, interesting_search
+from src.utils import check_dayfirst, parse_datetime
 
 with open("./assets/stopwords/stop_words.pkl", "rb") as f:
     stopwords = pickle.load(f)
@@ -83,25 +84,10 @@ def message_extractor(x):
         return s
 
 
-def check_dates(dates):
-    for date in dates:
-        date = date[: date.find(", ")]
-        try:
-            day, month, year = date.split("/")
-        except:
-            print("Invalid date format:", date)
-            raise HTTPException(status_code=500, detail="Invalid date format")
-        try:
-            datetime.datetime(int(year), int(month), int(day))
-        except ValueError:
-            return False
-    return True
-
-
 def chats_to_df(chats):
     REGEX = {
-        "IOS": "^[{1}[0-9]+[\/|\–|\-|\.][0-9]+[\/|\–|\-|\.][0-9]+,?\s[0-9]+:[0-9]+:[0-9]+.*$",
-        "ANDROID": "^[0-9]+/[0-9]+/[0-9]+,\s[0-9]+:[0-9]+\s.*$",
+        "IOS": "^[{1}[0-9]+[\/|\–|\-|\.][0-9]+[\/|\–|\-|\.][0-9]+,?\s[0-9]+[:|.][0-9]+[:|.][0-9]+.*$",
+        "ANDROID": "^[0-9]+/[0-9]+/[0-9]+,?\s[0-9]+[:|.][0-9]+\s.*$",
     }
     new_chats = []
     phone = "ANDROID"
@@ -117,6 +103,9 @@ def chats_to_df(chats):
             new_chats[c] += "\n" + chats[i]
             i += 1
         c += 1
+    
+    if len(new_chats) > 2:
+        print("0. "+new_chats[0], "1. "+new_chats[1], sep="\n")
 
     wa_data = pd.DataFrame(new_chats, columns=["chats"])
     wa_data["time"] = wa_data["chats"].apply(time_extractor, args=(phone,))
@@ -124,17 +113,13 @@ def chats_to_df(chats):
     wa_data["person"] = wa_data["person_chat"].apply(person_extractor)
     wa_data["message"] = wa_data["person_chat"].apply(message_extractor)
 
-    wa_data["time"] = wa_data["time"].apply(
-        lambda x: x.replace("–", "/").replace("-", "/").replace(".", "/")
-    )
-
-    dayfirst = check_dates(list(wa_data["time"]))
-    wa_data["time"] = pd.to_datetime(wa_data["time"], dayfirst=dayfirst)
+    dayfirst = check_dayfirst(list(wa_data["time"]))
+    wa_data["time"] = wa_data["time"].apply(parse_datetime, args=(dayfirst,))
 
     df = pd.DataFrame(wa_data["time"])
     df["sender"] = wa_data["person"]
     df["message"] = wa_data["message"]
-
+    print(df.head(2))
     return df
 
 
@@ -516,6 +501,9 @@ def analyze(chats):
 
 def wrap(chats):
     df = getYear2022(chats_to_df(chats))
+    print("\n\n---------------------------------------------")
+    print("Members")
+    print("---------------------------------------------")
     if df.shape[0] < 15:
         return None
     total_chats = len(df["message"])
@@ -560,16 +548,16 @@ def wrap(chats):
 
     total_mins, count_df = get_total_minutes(df)
 
-    print("\n\n---------------------------------------------")
+    print("\n\n\n---------------------------------------------")
     print(" Chat Statistics")
     print("---------------------------------------------")
 
     print("Total chats:\t\t " + str(total_chats))
-    print("Total members:\t\t " + str(num_members))
-    print("Total minutes:\t\t " + str(total_mins))
+    print("Total members:\t " + str(num_members))
+    print("Total minutes:\t " + str(total_mins))
 
     top_percent_100 = round(top_percent * 100, 2)
-    print("Top percentile:\t\t ", top_percent_100, "%", sep="")
+    print("Top percentile:\t ", top_percent_100, "%", sep="")
 
     print("Most active month:\t " + max_month["month"])
     print("Month correlation:\t", round(month_corr, 4))
