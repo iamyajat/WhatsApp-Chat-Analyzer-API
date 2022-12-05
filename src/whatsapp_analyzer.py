@@ -537,6 +537,8 @@ def wrap(chats):
     for h in hours:
         if h["count"] > max_hour["count"]:
             max_hour = h
+
+    active_day = most_active_day(df)
     top_10_emoji = most_used_emoji(df)
     # cloud_words = word_cloud_words(df)
     z, p = zscore(len(df.index))
@@ -552,21 +554,42 @@ def wrap(chats):
 
     longest_gap = longest_wait(df)
 
-
     talk_string = get_chat_date_string(
         df, longest_gap["start_time"], longest_gap["end_time"]
     )
 
     total_mins, count_df = get_total_minutes(df)
-    
+
     print("\n\n---------------------------------------------")
     print(" Chat Statistics")
     print("---------------------------------------------")
 
     print("Total chats:\t\t " + str(total_chats))
+    print("Total members:\t\t " + str(num_members))
+    print("Total minutes:\t\t " + str(total_mins))
 
     top_percent_100 = round(top_percent * 100, 2)
-    print("Top Percent:\t\t ", top_percent_100, "%", sep="")
+    print("Top percentile:\t\t ", top_percent_100, "%", sep="")
+
+    print("Most active month:\t " + max_month["month"])
+    print("Month correlation:\t", round(month_corr, 4))
+
+    # convert to 12 hour time
+    m_hour = max_hour["hour"] % 12
+    if m_hour == 0:
+        m_hour = 12
+    ampm = "AM"
+    if max_hour["hour"] >= 12:
+        ampm = "PM"
+    print("Most active hour:\t ", str(m_hour)," ", ampm, " (", max_hour["hour"], ")", sep="")
+
+
+    print(
+        "Most active day:\t "
+        + datetime.datetime.fromtimestamp(active_day["date"] / 1000).strftime(
+            "%B %d, %Y"
+        )
+    )
 
     # get median of time difference
     # median_time_diff = get_median_time_diff(df)
@@ -577,7 +600,8 @@ def wrap(chats):
     # get the reponsiveness of the chat
     responsiveness = get_responsiveness(df, time_diff_percentile)
 
-    longest_gap_in_days = int(longest_gap['gap']/(24*60*60*1000))
+    longest_gap_in_days = int(longest_gap["gap"] / (24 * 60 * 60 * 1000))
+    longest_session = interesting_search(df, count_df)
 
     print("Longest gap:\t\t", longest_gap_in_days, "days")
 
@@ -600,8 +624,8 @@ def wrap(chats):
         "monthly_chats_count": months,
         "most_active_hour": max_hour,
         "hourly_count": hours,
-        "most_active_day": most_active_day(df),
-        "longest_session": interesting_search(df, count_df),
+        "most_active_day": active_day,
+        "longest_session": longest_session,
         "longest_gap": longest_gap,
         "no_talk_string": talk_string,
         "who_texts_first": who_texts_first(df),
