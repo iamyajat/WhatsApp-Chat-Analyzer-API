@@ -18,6 +18,7 @@ import base64
 import io
 from zipfile import ZipFile
 from src.interesting_search import get_total_minutes, interesting_search
+from src.utils import check_dayfirst, parse_datetime
 
 with open("./assets/stopwords/stop_words.pkl", "rb") as f:
     stopwords = pickle.load(f)
@@ -83,25 +84,10 @@ def message_extractor(x):
         return s
 
 
-def check_dates(dates):
-    for date in dates:
-        date = date[: date.find(", ")]
-        try:
-            day, month, year = date.split("/")
-        except:
-            print("Invalid date format:", date)
-            raise HTTPException(status_code=500, detail="Invalid date format")
-        try:
-            datetime.datetime(int(year), int(month), int(day))
-        except ValueError:
-            return False
-    return True
-
-
 def chats_to_df(chats):
     REGEX = {
-        "IOS": "^[{1}[0-9]+[\/|\–|\-|\.][0-9]+[\/|\–|\-|\.][0-9]+,?\s[0-9]+:[0-9]+:[0-9]+.*$",
-        "ANDROID": "^[0-9]+/[0-9]+/[0-9]+,\s[0-9]+:[0-9]+\s.*$",
+        "IOS": "^[{1}[0-9]+[\/|\–|\-|\.][0-9]+[\/|\–|\-|\.][0-9]+,?\s[0-9]+[:|.][0-9]+[:|.][0-9]+.*$",
+        "ANDROID": "^[0-9]+/[0-9]+/[0-9]+,?\s[0-9]+[:|.][0-9]+\s.*$",
     }
     new_chats = []
     phone = "ANDROID"
@@ -117,6 +103,9 @@ def chats_to_df(chats):
             new_chats[c] += "\n" + chats[i]
             i += 1
         c += 1
+    
+    if len(new_chats) > 2:
+        print("0. "+new_chats[0], "1. "+new_chats[1], sep="\n")
 
     wa_data = pd.DataFrame(new_chats, columns=["chats"])
     wa_data["time"] = wa_data["chats"].apply(time_extractor, args=(phone,))
@@ -124,17 +113,13 @@ def chats_to_df(chats):
     wa_data["person"] = wa_data["person_chat"].apply(person_extractor)
     wa_data["message"] = wa_data["person_chat"].apply(message_extractor)
 
-    wa_data["time"] = wa_data["time"].apply(
-        lambda x: x.replace("–", "/").replace("-", "/").replace(".", "/")
-    )
-
-    dayfirst = check_dates(list(wa_data["time"]))
-    wa_data["time"] = pd.to_datetime(wa_data["time"], dayfirst=dayfirst)
+    dayfirst = check_dayfirst(list(wa_data["time"]))
+    wa_data["time"] = wa_data["time"].apply(parse_datetime, args=(dayfirst,))
 
     df = pd.DataFrame(wa_data["time"])
     df["sender"] = wa_data["person"]
     df["message"] = wa_data["message"]
-
+    print(df.head(2))
     return df
 
 
@@ -456,8 +441,8 @@ def most_active_day(df):
 
 
 def zscore(amt):
-    mean = 30000
-    std = 20000
+    mean = 22000
+    std = 12000
     z = (amt - mean) / std
     p = st.norm.cdf(z)
     return z, max(min(p, 0.999999), 0.0001)
@@ -472,6 +457,30 @@ def get_median_time_diff(df):
     if len(time_df_list) == 0:
         return 0
     return np.median(time_df_list)
+
+
+# get every 10%, 20%, 30%.... 90% of the time difference
+def get_time_diff_percentile(df):
+    time_df_list = list(df["time_diff"])[1:]
+    time_df_list = [x.total_seconds() for x in time_df_list]
+    time_df_list.sort()
+    # print(time_df_list)
+    if len(time_df_list) == 0:
+        return 0
+    percentiles = []
+    for i in range(1, 51):
+        percentiles.append(np.percentile(time_df_list, i * 2))
+    return percentiles
+
+
+# get the reponsiveness of the chat
+def get_responsiveness(df, percentiles):
+    # get the first greater than zero percentile
+    for i in range(len(percentiles)):
+        if percentiles[i] > 0:
+            print("Chat responsiveness:\t", (i / 50.0))
+            return i
+    return 0
 
 
 def analyze(chats):
@@ -492,6 +501,9 @@ def analyze(chats):
 
 def wrap(chats):
     df = getYear2022(chats_to_df(chats))
+    print("\n\n---------------------------------------------")
+    print("Members")
+    print("---------------------------------------------")
     if df.shape[0] < 15:
         return None
     total_chats = len(df["message"])
@@ -513,12 +525,18 @@ def wrap(chats):
     for h in hours:
         if h["count"] > max_hour["count"]:
             max_hour = h
+
+    active_day = most_active_day(df)
     top_10_emoji = most_used_emoji(df)
     # cloud_words = word_cloud_words(df)
     z, p = zscore(len(df.index))
 
+    top_percent = 1 - p
+
     if chat_members:
-        print(chat_members)
+        # print chat members
+        for member in chat_members:
+            print(member, end=" | ")
     else:
         "No members found"
 
@@ -530,8 +548,70 @@ def wrap(chats):
 
     total_mins, count_df = get_total_minutes(df)
 
+    print("\n\n\n---------------------------------------------")
+    print(" Chat Statistics")
+    print("---------------------------------------------")
+
+    print("Total chats:\t\t " + str(total_chats))
+    print("Total members:\t " + str(num_members))
+    print("Total minutes:\t " + str(total_mins))
+
+    top_percent_100 = round(top_percent * 100, 2)
+    print("Top percentile:\t ", top_percent_100, "%", sep="")
+
+    print("Most active month:\t " + max_month["month"])
+    print("Month correlation:\t", round(month_corr, 4))
+
+    # convert to 12 hour time
+    m_hour = max_hour["hour"] % 12
+    if m_hour == 0:
+        m_hour = 12
+    ampm = "AM"
+    if max_hour["hour"] >= 12:
+        ampm = "PM"
+    print(
+        "Most active hour:\t ",
+        str(m_hour),
+        " ",
+        ampm,
+        " (",
+        max_hour["hour"],
+        ")",
+        sep="",
+    )
+
+    print(
+        "Most active day:\t "
+        + datetime.datetime.fromtimestamp(active_day["date"] / 1000).strftime(
+            "%B %d, %Y"
+        )
+    )
+
     # get median of time difference
-    median_time_diff = get_median_time_diff(df)
+    # median_time_diff = get_median_time_diff(df)
+
+    # get every 10%, 20%, 30%.... 90% of the time difference
+    time_diff_percentile = get_time_diff_percentile(df)
+
+    # get the reponsiveness of the chat
+    responsiveness = get_responsiveness(df, time_diff_percentile)
+
+    longest_gap_in_days = int(longest_gap["gap"] / (24 * 60 * 60 * 1000))
+    longest_session = interesting_search(df, count_df)
+
+    print("Longest gap:\t\t", longest_gap_in_days, "days")
+    print(
+        "Longest gap start:\t",
+        datetime.datetime.fromtimestamp(longest_gap["start_time"] / 1000).strftime(
+            "%B %d, %Y"
+        ),
+    )
+    print(
+        "Longest gap end:\t",
+        datetime.datetime.fromtimestamp(longest_gap["end_time"] / 1000).strftime(
+            "%B %d, %Y"
+        ),
+    )
 
     return {
         "group": len(chat_members) > 2,
@@ -539,19 +619,21 @@ def wrap(chats):
         # "gender": get_category(chat_members),
         "total_no_of_chats": total_chats,
         "total_no_of_minutes": total_mins,
-        "top_percent": (1 - p),
+        "top_percent": top_percent,
         # "z_score": z,
         "most_active_member": num_arr[0] if len(num_arr) != 0 else "No one",
         "no_of_messages_per_member": num_arr,
         # "word_count_per_member": words,
-        "median_reply_time": (median_time_diff / 60.0),
+        # "median_reply_time": (median_time_diff / 60.0),
+        # "reply_time_percentile": [x / 60.0 for x in time_diff_percentile],
+        "chat_responsiveness": responsiveness / 50.0,
         "most_active_month": max_month,
         "month_correlation": month_corr,
         "monthly_chats_count": months,
         "most_active_hour": max_hour,
         "hourly_count": hours,
-        "most_active_day": most_active_day(df),
-        "longest_session": interesting_search(df, count_df),
+        "most_active_day": active_day,
+        "longest_session": longest_session,
         "longest_gap": longest_gap,
         "no_talk_string": talk_string,
         "who_texts_first": who_texts_first(df),

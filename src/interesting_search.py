@@ -43,16 +43,24 @@ def interesting_search(original_df, count_df):
     longest_streak_start = count_df["time"][streak_start] * 60000
     longest_streak_end = count_df["time"][streak_end] * 60000
     total_messages_sent = count_df["count"][streak_start:streak_end].sum()
-    average_reply_time = (
-        original_df["time"][streak_end] - original_df["time"][streak_start]
-    ).total_seconds() / (streak_end - streak_start)
+    average_reply_time = (longest_streak_end - longest_streak_start) / (
+        total_messages_sent * 1000
+    )
+
+    # convert longest streak to datetime
+    longest_streak_start_dt = datetime.datetime.fromtimestamp(
+        longest_streak_start / 1000
+    ).strftime("%B %d, %Y")
+    longest_streak_end_dt = datetime.datetime.fromtimestamp(
+        longest_streak_end / 1000
+    ).strftime("%B %d, %Y")
 
     # print the stats
-    print("Longest streak: ", longest_streak)
-    print("Longest streak start: ", longest_streak_start)
-    print("Longest streak end: ", longest_streak_end)
-    print("Total messages sent: ", total_messages_sent)
-    print("Average reply time: ", average_reply_time)
+    print("Longest streak:\t", longest_streak, "minutes")
+    print("Total messages sent:\t", total_messages_sent, "messages")
+    print("Longest streak date:\t", longest_streak_start_dt)
+    # print("Longest streak end: ", longest_streak_end_dt)
+    print("Average reply time:\t", round(average_reply_time, 2), "seconds")
 
     # find messages during longest streak
     original_df = original_df[
