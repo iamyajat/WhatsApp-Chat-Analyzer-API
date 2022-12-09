@@ -6,20 +6,35 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import PlainTextResponse
 from starlette.responses import RedirectResponse
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
+import os
 
-app = FastAPI(
-    title="WhatsApp Analyzer",
-    version="2.0",
-    description="Get beautiful insights about your chats!",
-)
+env_name = os.getenv("ENV_NAME", "dev")
 
-print("DOCS:", "http://127.0.0.1:8000/docs")
+if (env_name == "prod"):
+    app = FastAPI(
+        title="WhatsApp Analyzer",
+        version="2.0",
+        description="Get beautiful insights about your chats!",
+        docs_url=None,
+        redoc_url=None,
+    )
+    app.add_middleware(HTTPSRedirectMiddleware)
+else:
+    print("DEV MODE")
+    app = FastAPI(
+        title="WhatsApp Analyzer",
+        version="2.0",
+        description="Get beautiful insights about your chats!"
+    )
+
+    print("DOCS:", "http://127.0.0.1:8000/docs")
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "https://ourchatstory.co"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -106,7 +121,7 @@ async def wrap(file: UploadFile = File(...)):
     file_type = file.filename.split(".")[-1]
     extension = file_type in ("txt", "TXT", "zip", "ZIP")
     print("\n\n---------------------------------------------")
-    print(" "+file.filename.split(".")[0])
+    print(" " + file.filename.split(".")[0])
     print("---------------------------------------------")
     if not extension:
         raise HTTPException(
