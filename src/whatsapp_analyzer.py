@@ -84,6 +84,14 @@ def message_extractor(x):
         return s
 
 
+def parse_message(s, phone):
+    time = time_extractor(s, phone)
+    person_chat = chat_extractor(s, phone)
+    person = person_extractor(person_chat)
+    message = message_extractor(person_chat)
+    return [time.lower(), person, message]
+
+
 def chats_to_df(chats):
     REGEX = {
         "IOS": "^[{1}[0-9]+[\/|\–|\-|\.][0-9]+[\/|\–|\-|\.][0-9]+,?\s[0-9]+[:|.][0-9]+[:|.][0-9]+.*$",
@@ -103,24 +111,18 @@ def chats_to_df(chats):
             new_chats[c] += "\n" + chats[i]
             i += 1
         c += 1
-    
-    if len(new_chats) > 2:
-        print("0. "+new_chats[0], "1. "+new_chats[1], sep="\n")
 
     wa_data = pd.DataFrame(new_chats, columns=["chats"])
-    wa_data["time"] = wa_data["chats"].apply(time_extractor, args=(phone,))
-    wa_data["person_chat"] = wa_data["chats"].apply(chat_extractor, args=(phone,))
-    wa_data["person"] = wa_data["person_chat"].apply(person_extractor)
-    wa_data["message"] = wa_data["person_chat"].apply(message_extractor)
+    wa_data = wa_data["chats"].apply(parse_message, args=(phone,))
+
+    wa_data = pd.DataFrame(wa_data.tolist(), columns=["time", "sender", "message"])
+
+    wa_data.columns = ["time", "sender", "message"]
 
     dayfirst = check_dayfirst(list(wa_data["time"]))
     wa_data["time"] = wa_data["time"].apply(parse_datetime, args=(dayfirst,))
 
-    df = pd.DataFrame(wa_data["time"])
-    df["sender"] = wa_data["person"]
-    df["message"] = wa_data["message"]
-    print(df.head(2))
-    return df
+    return wa_data
 
 
 def members(df):
@@ -131,7 +133,6 @@ def members(df):
 
 def getYear2022(df):
     df = df[df["time"].dt.year == 2022]
-    df.reset_index(drop=True, inplace=True)
     df.dropna(inplace=True)
     df.reset_index(drop=True, inplace=True)
     return df
@@ -310,7 +311,6 @@ def get_time_diff(df):
 def longest_wait(df):
     try:
         df = get_time_diff(df)
-        # print(df["time_diff"].max())
         df1 = df[df["time_diff"] == df["time_diff"].max()]
         max_gap = df1["time_diff"].max()
         date1 = df1["time"].iloc[0]
@@ -453,7 +453,6 @@ def get_median_time_diff(df):
     time_df_list = list(df["time_diff"])[1:]
     time_df_list = [x.total_seconds() for x in time_df_list]
     time_df_list.sort()
-    # print(time_df_list)
     if len(time_df_list) == 0:
         return 0
     return np.median(time_df_list)
@@ -464,7 +463,6 @@ def get_time_diff_percentile(df):
     time_df_list = list(df["time_diff"])[1:]
     time_df_list = [x.total_seconds() for x in time_df_list]
     time_df_list.sort()
-    # print(time_df_list)
     if len(time_df_list) == 0:
         return 0
     percentiles = []
@@ -535,8 +533,7 @@ def wrap(chats):
 
     if chat_members:
         # print chat members
-        for member in chat_members:
-            print(member, end=" | ")
+        print(", ".join(chat_members))
     else:
         "No members found"
 

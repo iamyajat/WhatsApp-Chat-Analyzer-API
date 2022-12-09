@@ -126,7 +126,6 @@ async def wrap(file: UploadFile = File(...)):
     chats = split("\n", decoded_contents)
     resp = wa.wrap(chats)
     if resp != None:
-        print("\n\n")
         return resp
     else:
         raise HTTPException(

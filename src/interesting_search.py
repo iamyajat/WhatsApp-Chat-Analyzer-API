@@ -63,13 +63,13 @@ def interesting_search(original_df, count_df):
     print("Average reply time:\t", round(average_reply_time, 2), "seconds")
 
     # find messages during longest streak
-    original_df = original_df[
-        original_df["iso_time"].isin(count_df["time"][streak_start:streak_end])
-    ]
+    # original_df = original_df[
+    #     original_df["iso_time"].isin(count_df["time"][streak_start:streak_end])
+    # ]
 
-    odf_json_str = original_df[["time", "sender", "message"]].to_json(orient="records")
-    odf_json = json.loads(odf_json_str)
-    odf_json[-1]["message"] = odf_json[-1]["message"][:-1]
+    # odf_json_str = original_df[["time", "sender", "message"]].to_json(orient="records")
+    # odf_json = json.loads(odf_json_str)
+    # odf_json[-1]["message"] = odf_json[-1]["message"][:-1]
 
     # return as dictionary
     return {
@@ -80,8 +80,6 @@ def interesting_search(original_df, count_df):
         "average_reply_time": float(average_reply_time),
         # "messages_during_streak": odf_json,
     }
-
-    return 0
 
 
 def get_total_minutes(df):
