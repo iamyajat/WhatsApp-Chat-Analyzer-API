@@ -12,7 +12,7 @@ import os
 
 env_name = os.getenv("ENV_NAME", "dev")
 
-if (env_name == "prod"):
+if env_name == "prod":
     app = FastAPI(
         title="WhatsApp Analyzer",
         version="2.0",
@@ -26,9 +26,8 @@ else:
     app = FastAPI(
         title="WhatsApp Analyzer",
         version="2.0",
-        description="Get beautiful insights about your chats!"
+        description="Get beautiful insights about your chats!",
     )
-
     print("DOCS:", "http://127.0.0.1:8000/docs")
 
 
@@ -43,76 +42,82 @@ app.add_middleware(
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, exc):
-    print(exc.detail)
-    return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
-
-
-@app.get("/")
-async def root():
     response = RedirectResponse(url="https://ourchatstory.co")
     return response
 
 
-@app.post("/chats_to_json")
-async def chats_to_json(file: UploadFile = File(...)):
-    """Get your chats in JSON format. (Upload WhatsApp chats as .txt)"""
-    extension = file.filename.split(".")[-1] in ("txt", "TXT")
-    if not extension:
-        raise HTTPException(status_code=400, detail="Please upload .txt files only!")
-    contents = await file.read()
-    decoded_contents = contents.decode("utf-8")
-    chats = split("\n", decoded_contents)
-    resp = wa.chats_to_json(chats)
-    return resp
+if env_name == "dev":
 
+    @app.get("/")
+    async def root():
+        response = RedirectResponse(url="https://ourchatstory.co")
+        return response
 
-@app.post("/analyze")
-async def analyze(file: UploadFile = File(...)):
-    """Get an analysis of your chats. (Upload WhatsApp chats as .txt)"""
-    extension = file.filename.split(".")[-1] in ("txt", "TXT")
-    if not extension:
-        raise HTTPException(status_code=400, detail="Please upload .txt files only!")
-    contents = await file.read()
-    decoded_contents = contents.decode("utf-8")
-    chats = split("\n", decoded_contents)
-    resp = wa.analyze(chats)
-    return resp
+    @app.post("/chats_to_json")
+    async def chats_to_json(file: UploadFile = File(...)):
+        """Get your chats in JSON format. (Upload WhatsApp chats as .txt)"""
+        extension = file.filename.split(".")[-1] in ("txt", "TXT")
+        if not extension:
+            raise HTTPException(
+                status_code=400, detail="Please upload .txt files only!"
+            )
+        contents = await file.read()
+        decoded_contents = contents.decode("utf-8")
+        chats = split("\n", decoded_contents)
+        resp = wa.chats_to_json(chats)
+        return resp
 
+    @app.post("/analyze")
+    async def analyze(file: UploadFile = File(...)):
+        """Get an analysis of your chats. (Upload WhatsApp chats as .txt)"""
+        extension = file.filename.split(".")[-1] in ("txt", "TXT")
+        if not extension:
+            raise HTTPException(
+                status_code=400, detail="Please upload .txt files only!"
+            )
+        contents = await file.read()
+        decoded_contents = contents.decode("utf-8")
+        chats = split("\n", decoded_contents)
+        resp = wa.analyze(chats)
+        return resp
 
-@app.post("/throwback")
-async def random(n: int = 10, file: UploadFile = File(...)):
-    """Get a set of n old chats. (Upload WhatsApp chats as .txt)"""
-    extension = file.filename.split(".")[-1] in ("txt", "TXT")
-    if not extension:
-        raise HTTPException(status_code=400, detail="Please upload .txt files only!")
-    contents = await file.read()
-    decoded_contents = contents.decode("utf-8")
-    chats = split("\n", decoded_contents)
-    resp = wa.throwback_chats(chats, n)
-    return resp
+    @app.post("/throwback")
+    async def random(n: int = 10, file: UploadFile = File(...)):
+        """Get a set of n old chats. (Upload WhatsApp chats as .txt)"""
+        extension = file.filename.split(".")[-1] in ("txt", "TXT")
+        if not extension:
+            raise HTTPException(
+                status_code=400, detail="Please upload .txt files only!"
+            )
+        contents = await file.read()
+        decoded_contents = contents.decode("utf-8")
+        chats = split("\n", decoded_contents)
+        resp = wa.throwback_chats(chats, n)
+        return resp
 
-
-@app.post("/wordcloud")
-async def word_cloud(file: UploadFile = File(...)):
-    """Get a word cloud"""
-    extension = file.filename.split(".")[-1] in ("txt", "TXT")
-    if not extension:
-        raise HTTPException(status_code=400, detail="Please upload .txt files only!")
-    contents = await file.read()
-    decoded_contents = contents.decode("utf-8")
-    chats = split("\n", decoded_contents)
-    img = wa.get_word_cloud(chats)
-    # buf = io.BytesIO()
-    # plt.imsave(buf, img, format="PNG")
-    # buf.seek(0)
-    # return StreamingResponse(
-    #     buf,
-    #     media_type="image/jpeg",
-    #     headers={
-    #         "Content-Disposition": 'inline; filename="%s.jpg"' % (file.filename[:-4],)
-    #     },
-    # )
-    return img
+    @app.post("/wordcloud")
+    async def word_cloud(file: UploadFile = File(...)):
+        """Get a word cloud"""
+        extension = file.filename.split(".")[-1] in ("txt", "TXT")
+        if not extension:
+            raise HTTPException(
+                status_code=400, detail="Please upload .txt files only!"
+            )
+        contents = await file.read()
+        decoded_contents = contents.decode("utf-8")
+        chats = split("\n", decoded_contents)
+        img = wa.get_word_cloud(chats)
+        # buf = io.BytesIO()
+        # plt.imsave(buf, img, format="PNG")
+        # buf.seek(0)
+        # return StreamingResponse(
+        #     buf,
+        #     media_type="image/jpeg",
+        #     headers={
+        #         "Content-Disposition": 'inline; filename="%s.jpg"' % (file.filename[:-4],)
+        #     },
+        # )
+        return img
 
 
 @app.post("/wrap")
