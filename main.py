@@ -10,7 +10,7 @@ from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 import os
 
-env_name = os.getenv("ENV_NAME", "prod")
+env_name = os.getenv("ENV_NAME", "dev")
 
 if (env_name == "prod"):
     app = FastAPI(
