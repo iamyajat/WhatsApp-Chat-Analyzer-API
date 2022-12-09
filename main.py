@@ -19,7 +19,7 @@ print("DOCS:", "http://127.0.0.1:8000/docs")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "https://ourchatstory.co"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -106,7 +106,7 @@ async def wrap(file: UploadFile = File(...)):
     file_type = file.filename.split(".")[-1]
     extension = file_type in ("txt", "TXT", "zip", "ZIP")
     print("\n\n---------------------------------------------")
-    print(" "+file.filename.split(".")[0])
+    print(" " + file.filename.split(".")[0])
     print("---------------------------------------------")
     if not extension:
         raise HTTPException(
