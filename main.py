@@ -20,7 +20,7 @@ if env_name == "prod":
         docs_url=None,
         redoc_url=None,
     )
-    app.add_middleware(HTTPSRedirectMiddleware)
+    # app.add_middleware(HTTPSRedirectMiddleware)
 else:
     print("DEV MODE")
     app = FastAPI(
@@ -40,10 +40,10 @@ app.add_middleware(
 )
 
 
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request, exc):
-    response = RedirectResponse(url="https://ourchatstory.co")
-    return response
+# @app.exception_handler(StarletteHTTPException)
+# async def http_exception_handler(request, exc):
+#     response = RedirectResponse(url="https://ourchatstory.co")
+#     return response
 
 
 if env_name == "dev":
