@@ -22,6 +22,9 @@ def parse_datetime(
     # example: parse_datetime('04/07/20, 5:20:25 pm')
     # example: parse_datetime('04/07/20, 5:20:25 am')
 
+    # replace invisible charcaters with space
+    s = re.sub(r"\s+", " ", s)
+
     # compile regex pattern to match date and time formats
     regex = re.compile(
         r"(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})[ ,]*(\d{1,2})[:\.](\d{1,2})[:\.]?(\d{1,2})?[ ]?([ap]m)?"
@@ -80,6 +83,8 @@ def parse_datetime(
 # print("7.", parse_datetime("03-23-22, 5:59", dayfirst=False))
 # print("8.", parse_datetime("04/07/20, 15:20:25"))
 # print("9.", parse_datetime("07/23/20, 15:20:25", dayfirst=False))
+# print("10.", parse_datetime("07/23/20, 05:20:25 pm", dayfirst=False))
+# print("11.", parse_datetime("20/03/22, 4:25 pm", dayfirst=True))
 
 
 # output
@@ -92,6 +97,8 @@ def parse_datetime(
 # 7. 2022-03-23 05:59:00
 # 8. 2020-07-04 15:20:25
 # 9. 2020-07-23 15:20:25
+# 10. 2020-07-23 17:20:25
+# 11. 2022-03-20 16:25:00
 
 
 # from an array of dates find out if the dates are dayfirst or monthfirst
