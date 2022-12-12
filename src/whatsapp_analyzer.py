@@ -499,11 +499,12 @@ def analyze(chats):
 
 def wrap(chats):
     df = getYear2022(chats_to_df(chats))
+    if df.shape[0] < 75:
+        print("\nNot enough members or chats to analyze from 2022!\n\n")
+        return None
     print("\n\n---------------------------------------------")
     print("Members")
     print("---------------------------------------------")
-    if df.shape[0] < 15:
-        return None
     total_chats = len(df["message"])
     chat_members = members(df)
     num_members = len(chat_members)
